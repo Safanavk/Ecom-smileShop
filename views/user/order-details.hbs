@@ -1,0 +1,144 @@
+<style>
+    .new {
+        height: auto;
+        position: relative;
+        top: 100px;
+    }
+
+    #back {
+        margin-bottom: 20px;
+        font-size: 20px;
+        font-weight: 500;
+    }
+
+    .add {
+        margin-top: 20px;
+    }
+    .btn-primary{
+        color: white !important;
+        margin-top: 10px;
+    }
+</style>
+<div class="bg0 m-t-23 p-b-140 new">
+    <section class="order-details page-wrapper">
+        <div class="container">
+            <a id="back" href="/get/orders">Back</a>
+            <div class="row">
+                <div class="col-md-12">
+
+                    <div class="dashboard-wrapper user-dashboard">
+                        <div class="order-details-content">
+                            <h3>Order Details</h3>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Date</th>
+                                        <th>Total Items</th>
+                                        <th>Total Price</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>#{{order._id}}</td>
+                                        <td>{{formatDate order.createdAt}}</td>
+                                        <td>{{order.items.length}}</td>
+
+                                        <td>₹{{order.totalAmount}}</td>
+                                        <td><span
+                                                class="label label-{{order.orderStatus}} btn btn-primary">{{order.orderStatus}}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <h4>Items in this Order</h4>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Size</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{#each order.items}}
+                                    <tr>
+                                        <td>{{this.product.name}}</td>
+                                        <td>{{this.quantity}}</td>
+                                        <td>{{this.size}}</td>
+                                        <td>₹{{this.price}}</td>
+                                        <td>₹{{multiply this.quantity this.price}}</td>
+                                    </tr>
+                                    {{/each}}
+                                </tbody>
+                            </table>
+                            <h4 class="add">Shipping Address</h4>
+{{#if order.addressSnapshot}}
+<p>{{order.addressSnapshot.houseNumber}}, {{order.addressSnapshot.street}},
+   {{order.addressSnapshot.city}}, {{order.addressSnapshot.zipcode}}, {{order.addressSnapshot.country}}</p>
+{{else}}
+<p>{{order.address.place}}, {{order.address.houseNumber}}, {{order.address.street}},
+   {{order.address.city}}, {{order.address.zipcode}}, {{order.address.country}}</p>
+{{/if}}
+                            <h4 class="add">Payment Method</h4>
+                            <p>{{order.paymentMethod}}</p>
+                            <h4 class="add">Payment Status</h4>
+                            <p>{{order.paymentStatus}}</p>
+                            {{#ifCond order.orderStatus '===' 'Pending'}}
+                            <a class="btn btn-primary" id="cancelOrderBtn">Cancel Order</a>
+                            {{/ifCond}}
+
+                            {{#ifCond order.orderStatus '===' 'Processing'}}
+                            <a class="btn btn-primary" id="cancelOrderBtn">Cancel Order</a>
+                            {{/ifCond}}
+
+                            {{#ifCond order.orderStatus '===' 'Delivered'}}
+                            <a class="btn btn-main btn-small" href="/orders/{{order._id}}/return">Return Order</a>
+                            {{/ifCond}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Cancel Order
+    document.getElementById('cancelOrderBtn').addEventListener('click', function () {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you want to cancel this order?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, cancel it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/orders/{{order._id}}/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    return response.json().then(data => {
+                        if (response.ok) {
+                            Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error!', data.message || 'There was a problem cancelling your order.', 'error');
+                        }
+                    });
+                }).catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error!', 'An unexpected error occurred.', 'error');
+                });
+            }
+        });
+    });
+</script>

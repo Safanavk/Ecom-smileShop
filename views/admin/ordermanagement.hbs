@@ -1,0 +1,65 @@
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/admin/dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Order Management</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Order Management</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="orderTable" class="display table table-bordered" style="min-width: 845px">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>User</th>
+                                        <th>Address</th>
+                                        <th>Date</th>
+                                        <th>Payment Method</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>View</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{#each orders}}
+                                    <tr>
+                                        <td>{{this._id}}</td>
+                                        <td>{{this.user.firstname}} {{this.user.lastname}}</td>
+                                        <td>
+                                            {{#if this.addressSnapshot}}
+                                               <p>{{this.addressSnapshot.houseNumber}}, {{this.addressSnapshot.street}},
+                                                  {{this.addressSnapshot.city}}, {{this.addressSnapshot.zipcode}}, {{this.addressSnapshot.country}}</p>
+                                             {{else}}
+                                               <p>{{this.address.place}}, {{this.address.houseNumber}}, {{this.address.street}},
+                                                  {{this.address.city}}, {{this.address.zipcode}}, {{this.address.country}}</p>
+                                            {{/if}}
+                                        </td>
+                                        <td>{{formatDate this.createdAt}}</td>
+                                        <td>{{this.paymentMethod}}</td>
+                                        <td>₹{{this.totalAmount}}</td>
+                                        <td>{{this.orderStatus}}</td>
+                                        <td><a href="/admin/orders-a/{{this._id}}">View</a></td>
+                                    </tr>
+                                    {{/each}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+         

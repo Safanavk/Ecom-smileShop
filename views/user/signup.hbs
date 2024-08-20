@@ -1,0 +1,118 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<style>
+    .new {
+        width: 400px;
+        height: 1200px;
+        position: relative;
+        top: 150px;
+    }
+    .ptag {
+        margin-top: 25px;
+    }
+    .toggle-password {
+        background: none;
+        border: none;
+        cursor: pointer;
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .toggle-password i {
+        font-size: 1.2em;
+        color: #888;
+    }
+    .input-container {
+        position: relative;
+    }
+</style>
+
+<div class="container new">
+    {{#if success_msg}}
+    <div class="alert alert-success">{{success_msg}}</div>
+    {{/if}}
+    {{#if error_msg}}
+    <div class="alert alert-danger">{{error_msg}}</div>
+    {{/if}}
+    {{#if errors}}
+    {{#each errors}}
+    <div class="alert alert-danger">{{this.msg}}</div>
+    {{/each}}
+    {{/if}}
+
+    <div class="p-b-10">
+        <h3 class="ltext-103 cl5">Signup</h3>
+    </div>
+
+    <form action="/signup" method="POST" id="signupForm">
+        <div class="p-b-52">
+            <div class="bor8 dis-flex p-l-15 m-b-20">
+                <input class="mtext-107 cl2 size-114 plh2 p-r-15" type="text" name="firstname" placeholder="First Name" value="{{firstname}}">
+            </div>
+            <div class="bor8 dis-flex p-l-15 m-b-20">
+                <input class="mtext-107 cl2 size-114 plh2 p-r-15" type="text" name="lastname" placeholder="Last Name" value="{{lastname}}">
+            </div>
+
+            <div class="bor8 dis-flex p-l-15 m-b-20">
+                <input class="mtext-107 cl2 size-114 plh2 p-r-15" type="email" name="email" placeholder="Email" value="{{email}}">
+            </div>
+            <div class="bor8 dis-flex p-l-15 m-b-20">
+                <input class="mtext-107 cl2 size-114 plh2 p-r-15" type="number" name="mobile" placeholder="Mobile" value="{{mobile}}" pattern="\d{10}" title="Please enter a valid 10-digit mobile number">
+            </div>
+
+           <div class="bor8 dis-flex p-l-15 m-b-20 input-container">
+    <input class="mtext-107 cl2 size-114 plh2 p-r-15" 
+           type="password" 
+           id="password" 
+           name="password" 
+           placeholder="Password"
+           pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}"
+           title="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.">
+    <button type="button" class="toggle-password" data-toggle="#password">
+        <i class="fa fa-eye"></i>
+    </button>
+</div>
+
+<div class="bor8 dis-flex p-l-15 m-b-20 input-container">
+    <input class="mtext-107 cl2 size-114 plh2 p-r-15" 
+           type="password" 
+           id="password2" 
+           name="password2" 
+           placeholder="Confirm Password"
+           pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}"
+           title="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.">
+    <button type="button" class="toggle-password" data-toggle="#password2">
+        <i class="fa fa-eye"></i>
+    </button>
+</div>
+<div class="bor8 dis-flex p-l-15 m-b-20">
+                <input class="mtext-107 cl2 size-114 plh2 p-r-15" type="text" name="referralCode" placeholder="Referral Code (Optional)">
+            </div>
+            <button class="flex-c-m stext-106 cl6 size-104 bor4 pointer hov-btn3 trans-04" type="submit">Signup</button>
+            <p class="ptag">Already have an account? <a href="/login">Click here</a></p>
+        </div>
+        <a href="/auth/google" class="btn btn primary">SignUp with Google</a>
+    </form>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+        
+        togglePasswordButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const input = document.querySelector(button.getAttribute('data-toggle'));
+                const icon = button.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+    });
+</script>

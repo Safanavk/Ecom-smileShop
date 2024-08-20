@@ -1,0 +1,6 @@
+8xstHB01xjhQzGkd
+safana
+
+
+
+mongodb+srv://safana:8xstHB01xjhQzGkd@cluster0.jjramju.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0

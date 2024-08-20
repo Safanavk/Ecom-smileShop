@@ -1,0 +1,449 @@
+<style>
+    .size {
+        color: black;
+    }
+
+    .out-of-stock {
+        color: red;
+        font-weight: bold;
+    }
+
+    #bread {
+        margin: 20px 0px;
+    }
+
+    .bread1 {
+        font-size: 19px;
+        font-weight: 500;
+        padding: 0px 10px;
+
+    }
+    
+    /* Change the background of the previous button */
+.carousel-control-prev-icon {
+    background-image: url('data:image/svg+xml;charset=UTF8,%3Csvg xmlns%3D%27http%3A//www.w3.org/2000/svg%27 fill%3D%27%23000000%27 viewBox%3D%270 0 8 8%27%3E%3Cpath d%3D%27M4.97 0a.5.5 0 0 0-.354.854L6.793 3H1.5a.5.5 0 0 0 0 1h5.293l-2.177 2.146A.5.5 0 1 0 5.54 7.707l3.5-3.5a.5.5 0 0 0 0-.707l-3.5-3.5A.5.5 0 0 0 4.97 0z%27/%3E%3C/svg%3E');
+    background-color: black; /* Optional: Add background color if needed */
+    z-index: 10000;
+}
+
+/* Change the background of the next button */
+.carousel-control-next-icon {
+    background-image: url('data:image/svg+xml;charset=UTF8,%3Csvg xmlns%3D%27http%3A//www.w3.org/2000/svg%27 fill%3D%27%23000000%27 viewBox%3D%270 0 8 8%27%3E%3Cpath d%3D%27M3.03 0a.5.5 0 0 1 .354.854L1.207 3H6.5a.5.5 0 0 1 0 1H1.207l2.177 2.146A.5.5 0 1 1 2.46 7.707l-3.5-3.5a.5.5 0 0 1 0-.707l3.5-3.5A.5.5 0 0 1 3.03 0z%27/%3E%3C/svg%3E');
+    background-color: black; /* Optional: Add background color if needed */
+}
+
+</style>
+
+<!-- Product Detail -->
+<section class="sec-product-detail bg0 p-t-65 p-b-60 mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 col-lg-7 p-b-30">
+                <div style="width: 300px; display: flex; justfify-content:space-between;" id="bread"> <a
+                        href="/products" class="bread1"> Products </a> / <p class="bread1"> {{product.name}} </p>
+                </div>
+           <div class="p-l-25 p-r-30 p-lr-0-lg">
+  <div id="productCarousel" class="carousel slide" data-ride="carousel">
+    <div class="carousel-inner">
+      <div class="carousel-item active zoom-container">
+        <img id="zoom_01" src="/uploads/products/{{product.mainImage}}" 
+             data-zoom-image="/uploads/products/{{product.mainImage}}" 
+             class="img-fluid zoom-img" alt="{{product.name}}">
+      </div>
+      {{#each product.subImages}}
+      <div class="carousel-item zoom-container">
+        <img src="/uploads/products/{{this}}" 
+             data-zoom-image="/uploads/products/{{this}}" 
+             class="img-thumbnail zoom-img" alt="{{../product.name}}">
+      </div>
+      {{/each}}
+    </div>
+<!-- Previous Button -->
+<a class="carousel-control-prev" href="#productCarousel" role="button" data-slide="prev">
+    <span aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="black" class="bi bi-chevron-left" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 0-.708 0L5.646 6.646a.5.5 0 0 0 0 .708l5 5a.5.5 0 0 0 .708-.708L6.707 7l4.647-4.646a.5.5 0 0 0 0-.708z"/>
+        </svg>
+    </span>
+    <span class="sr-only">Previous</span>
+</a>
+
+<!-- Next Button -->
+<a class="carousel-control-next" href="#productCarousel" role="button" data-slide="next">
+    <span aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="black" class="bi bi-chevron-right" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l5 5a.5.5 0 0 1 0 .708l-5 5a.5.5 0 0 1-.708-.708L9.293 7 4.646 2.354a.5.5 0 0 1 0-.708z"/>
+        </svg>
+    </span>
+    <span class="sr-only">Next</span>
+</a>
+
+  </div>
+</div>
+
+
+
+            </div>
+
+            <div class="col-md-6 col-lg-5 p-b-30">
+                <div class="p-r-50 p-t-5 p-lr-0-lg">
+                    <h4 class="mtext-105 cl2 js-name-detail p-b-14">
+                        {{product.name}}
+                    </h4>
+                  
+                    <p class="product-price mtext-106 cl2">
+                {{#if product.effectiveOffer}}
+                <del>₹{{product.price}}</del>
+                <span>₹{{product.effectivePrice}}</span>
+                <span class="offer-tag" style="padding-left: 150px;">{{product.effectiveOffer}}% off</span>
+                {{else}}
+                ₹{{product.price}}
+                {{/if}}
+            </p>
+                    <p class="stext-102 cl3 p-t-23">
+                        {{product.description}}
+                    </p>
+                    <!-- Add to Cart Form -->
+                    <form id="add-to-cart-form" action="/cart/add" method="POST">
+                        <input type="hidden" name="productId" value="{{product._id}}">
+                        <div class="p-t-33">
+                            <div class="flex-w flex-r-m p-b-10">
+                                <div class="size-203 flex-c-m respon6">
+                                    Size
+                                </div>
+                                <div class="size-204 respon6-next">
+                                    <div class="rs1-select2 bor8 bg0">
+                                        <div class="product-size">
+                                            <select class="form-control" name="variantSize" id="product-size">
+                                                {{#each product.variants}}
+                                                <option value="{{this.size}}" data-stock="{{this.stock}}" {{#if (eq
+                                                    this.stock 0)}}disabled{{/if}}>
+                                                    {{this.size}} {{#if (eq this.stock 0)}}(Out of
+                                                    Stock){{else}}({{this.stock}} in stock){{/if}}
+                                                </option>
+                                                {{/each}}
+                                            </select>
+                                        </div>
+
+                                        <div class="dropDownSelect2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            {{#if (eq product.displayStatus 'Out of stock')}}
+                            <p class="out-of-stock">Out of stock</p>
+                            {{else}}
+                            <div class="flex-w flex-r-m p-b-10">
+                                <div class="size-204 flex-w flex-m respon6-next">
+                                    <div class="wrap-num-product flex-w m-r-20 m-tb-10">
+                                        <div class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m">
+                                            <i class="fs-16 zmdi zmdi-minus"></i>
+                                        </div>
+                                        <input class="mtext-104 cl3 txt-center num-product" type="number"
+                                            name="quantity" value="1" min="1" id="product-quantity">
+                                        <div class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m">
+                                            <i class="fs-16 zmdi zmdi-plus"></i>
+                                        </div>
+                                    </div>
+                                    <button type="submit"
+                                        class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail">
+
+                                        Add to cart
+                                    </button>
+                                </div>
+                            </div>
+                            {{/if}}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="bor10 m-t-50 p-t-43 p-b-40">
+            <!-- Tab01 -->
+            <div class="tab01">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item p-b-10">
+                        <a class="nav-link active" data-toggle="tab" href="#description" role="tab">Description</a>
+                    </li>
+
+                    <li class="nav-item p-b-10">
+                        <a class="nav-link" data-toggle="tab" href="#information" role="tab">Additional information</a>
+                    </li>
+
+                    <li class="nav-item p-b-10">
+                        <a class="nav-link" data-toggle="tab" href="#reviews" role="tab">Reviews (1)</a>
+                    </li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content p-t-43">
+                    <!-- - -->
+                    <div class="tab-pane fade show active" id="description" role="tabpanel">
+                        <div class="how-pos2 p-lr-15-md">
+                            <p class="stext-102 cl3 p-t-23">
+                                {{product.description}}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- - -->
+                    <div class="tab-pane fade" id="information" role="tabpanel">
+                        <div class="row">
+                            <div class="col-sm-10 col-md-8 col-lg-6 m-lr-auto">
+                                <ul class="p-lr-28 p-lr-15-sm">
+                                    {{#each product.highlights}}
+                                    <li class="flex-w flex-t p-b-7">
+                                        <span class="stext-102 cl3 size-205">
+                                            
+                                        </span>
+
+                                        <span class="stext-102 cl6 size-206">
+                                            
+                                        </span>
+
+                                        {{this}}
+                                    </li>
+                                    {{/each}}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- - -->
+                    <div class="tab-pane fade" id="reviews" role="tabpanel">
+                        <div class="row">
+                            <div class="col-sm-10 col-md-8 col-lg-6 m-lr-auto">
+                                <div class="p-b-30 m-lr-15-sm">
+                                    <!-- Review -->
+                                    <div class="flex-w flex-t p-b-68">
+                                        <div class="wrap-pic-s size-109 bor0 of-hidden m-r-18 m-t-6">
+                                            <img src="images/avatar-01.jpg" alt="AVATAR">
+                                        </div>
+
+                                        <div class="size-207">
+                                            <div class="flex-w flex-sb-m p-b-17">
+                                                <span class="mtext-107 cl2 p-r-20">
+                                                    Ariana Grande
+                                                </span>
+
+                                                <span class="fs-18 cl11">
+                                                    <i class="zmdi zmdi-star"></i>
+                                                    <i class="zmdi zmdi-star"></i>
+                                                    <i class="zmdi zmdi-star"></i>
+                                                    <i class="zmdi zmdi-star"></i>
+                                                    <i class="zmdi zmdi-star-half"></i>
+                                                </span>
+                                            </div>
+
+                                            <p class="stext-102 cl6">
+                                                Quod autem in homine praestantissimum atque optimum est, id deseruit.
+                                                Apud ceteros autem philosophos
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Add review -->
+                                    <form class="w-full">
+                                        <h5 class="mtext-108 cl2 p-b-7">
+                                            Add a review
+                                        </h5>
+
+                                        <p class="stext-102 cl6">
+                                            Your email address will not be published. Required fields are marked *
+                                        </p>
+
+                                        <div class="flex-w flex-m p-t-50 p-b-23">
+                                            <span class="stext-102 cl3 m-r-16">
+                                                Your Rating
+                                            </span>
+
+                                            <span class="wrap-rating fs-18 cl11 pointer">
+                                                <i class="item-rating pointer zmdi zmdi-star-outline"></i>
+                                                <i class="item-rating pointer zmdi zmdi-star-outline"></i>
+                                                <i class="item-rating pointer zmdi zmdi-star-outline"></i>
+                                                <i class="item-rating pointer zmdi zmdi-star-outline"></i>
+                                                <i class="item-rating pointer zmdi zmdi-star-outline"></i>
+                                                <input class="dis-none" type="number" name="rating">
+                                            </span>
+                                        </div>
+
+                                        <div class="row p-b-25">
+                                            <div class="col-12 p-b-5">
+                                                <label class="stext-102 cl3" for="review">Your review</label>
+                                                <textarea class="size-110 bor8 stext-102 cl2 p-lr-20 p-tb-10"
+                                                    id="review" name="review"></textarea>
+                                            </div>
+
+                                            <div class="col-sm-6 p-b-5">
+                                                <label class="stext-102 cl3" for="name">Name</label>
+                                                <input class="size-111 bor8 stext-102 cl2 p-lr-20" id="name" type="text"
+                                                    name="name">
+                                            </div>
+
+                                            <div class="col-sm-6 p-b-5">
+                                                <label class="stext-102 cl3" for="email">Email</label>
+                                                <input class="size-111 bor8 stext-102 cl2 p-lr-20" id="email"
+                                                    type="text" name="email">
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            class="flex-c-m stext-101 cl0 size-102 bg1 bor1 hov-btn1 p-lr-15 trans-04">
+                                            Submit
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Related Products -->
+        <div class="bor10 m-t-50 p-t-43 p-b-40">
+            <h4 class="mtext-105 cl2 p-b-14">Related Products</h4>
+            <div class="row">
+                {{#each relatedProducts}}
+                <div class="col-sm-6 col-md-4 col-lg-3 p-b-35">
+                    <div class="block2">
+                        <div class="block2-pic hov-img0">
+                            <img src="/uploads/products/{{this.mainImage}}" alt="{{this.name}}">
+
+                            <a href="/products/{{this._id}}"
+                                class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
+                                View
+                            </a>
+                        </div>
+
+                        <div class="block2-txt flex-w flex-t p-t-14">
+                            <div class="block2-txt-child1 flex-col-l ">
+                                <a href="/product/{{this._id}}" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+                                    {{this.name}}
+                                </a>
+
+                                <span class="stext-105 cl3">
+                                    {{this.price}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+<script>
+
+
+
+    document.getElementById('add-to-cart-form').addEventListener('submit', async function (event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const productId = this.productId.value;
+        const variantSize = this.variantSize.value;
+        const quantity = parseInt(this.quantity.value, 10);
+
+        const sizeSelect = document.getElementById('product-size');
+        const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+        const stock = parseInt(selectedOption.getAttribute('data-stock'), 10);
+
+        // Check if user is logged in
+        const isLoggedIn = {{#if user}}true{{else}}false{{/if}};
+
+    if (!isLoggedIn) {
+        Swal.fire({
+            title: 'Not Logged In',
+            text: 'You need to log in to add items to the cart.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Log In',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '/login';
+            }
+        });
+    } else {
+        // Validate stock and quantity before submitting
+        if (stock === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Out of Stock',
+                text: 'The selected size is currently out of stock. Please choose a different size.',
+            });
+        } else if (quantity > stock) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Insufficient Stock',
+                text: `Only ${ stock } units available in the selected size.Please reduce the quantity.,`
+            });
+    } else if (isNaN(quantity) || quantity <= 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Quantity',
+            text: 'Please enter a valid quantity.',
+        });
+    } else {
+        try {
+            // Check if product is already in the cart
+            const cartResponse = await fetch('/check-cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ productId, variantSize }),
+            });
+
+            const cartResult = await cartResponse.json();
+            if (cartResult.inCart) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Already in Cart',
+                    text: 'This product is already in your cart. You can update the quantity in the cart.',
+                });
+            } else {
+                // Add product to cart
+                const response = await fetch('/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ productId, variantSize, quantity }),
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: result.message,
+                        icon: 'success',
+                        confirmButtonText: 'Continue Shopping',
+                    }).then(() => {
+                        // Optional: Code to update cart UI or redirect user
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Oops!',
+                        text: result.message,
+                        icon: 'error',
+                        confirmButtonText: 'Try Again',
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error adding product to cart:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: 'An error occurred. Please try again later.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    }
+    }
+    });
+</script>

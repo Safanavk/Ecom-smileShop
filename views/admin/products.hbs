@@ -1,0 +1,189 @@
+<!--*******************
+    Preloader start
+********************-->
+<div id="preloader">
+    <div class="sk-three-bounce">
+        <div class="sk-child sk-bounce1"></div>
+        <div class="sk-child sk-bounce2"></div>
+        <div class="sk-child sk-bounce3"></div>
+    </div>
+</div>
+<!--*******************
+    Preloader end
+********************-->
+
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row mb-2 mt-4">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/admin/dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Product Management</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        <div class="card-header">
+            <h4 class="card-title">Product Management</h4>
+        </div>
+        <a href="/admin/products/add" class="btn btn-danger mb-3 mt-3">Add Product</a>
+        <a href="/admin/product/offers" class="btn btn-danger mb-3 mt-3">Product Offer</a>
+        {{#if success_msg}}
+        <div class="alert alert-success" role="alert">
+ {{success_msg}}
+ {{/if}}
+   {{#if error_msg}}
+        <div class="alert alert-error" role="alert">
+ {{error_msg}}
+ {{/if}}
+</div>
+        <table class="table" id="example">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Image</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Stocks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each products}}
+                <tr>
+                    <td>{{increment @index}}</td>
+                    <td>{{this.name}}</td>
+                    <td>
+                        {{#if this.mainImage}}
+                        <img src="/uploads/products/{{this.mainImage}}" alt="{{this.name}}" style="width: 100px;">
+                        {{else}}
+                        <span>No Image</span>
+                        {{/if}}
+                    </td>
+                    <td>{{this.category.name}}</td>
+                    <td>
+                        {{#if this.status}}
+                        <button class="btn btn-success toggle-status" data-id="{{this._id}}">Listed</button>
+                        {{else}}
+                        <button class="btn btn-secondary toggle-status" data-id="{{this._id}}">Unlisted</button>
+                        {{/if}}
+                    </td>
+                    <td>
+                        <a href="/admin/products/manage-stock/{{this._id}}" class="btn btn-info">Manage Stock</a>
+                    </td>
+                    <td>
+                        <a href="/admin/products/edit/{{this._id}}" class="btn btn-warning">Edit</a>
+                        <button class="btn btn-danger delete-product" data-id="{{this._id}}">Delete</button>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function () {
+        $('#example').DataTable({
+            "paging": true,
+            "searching": true,
+            "info": true,
+            "lengthChange": false,
+            "pageLength": 10
+        });
+
+        // Handle List/Unlist action
+        $('.toggle-status').on('click', function () {
+            var productId = $(this).data('id');
+            var button = $(this);
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to change the status of this product!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, change it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/products/toggle-status/${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Changed!',
+                                    'Product status has been changed.',
+                                    'success'
+                                );
+                                // Update button text based on new status
+                                if (button.hasClass('btn-success')) {
+                                    button.removeClass('btn-success').addClass('btn-secondary').text('Unlisted');
+                                } else {
+                                    button.removeClass('btn-secondary').addClass('btn-success').text('Listed');
+                                }
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    'There was an error changing the status.',
+                                    'error'
+                                );
+                            }
+                        });
+                }
+            });
+        });
+
+        // Handle Delete action
+        $('.delete-product').on('click', function () {
+            var productId = $(this).data('id');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/products/delete/${productId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Deleted!',
+                                    'Product has been deleted.',
+                                    'success'
+                                ).then(() => {
+                                    location.reload(); // Reload the page after deletion
+                                });
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    'There was an error deleting the product.',
+                                    'error'
+                                );
+                            }
+                        });
+                }
+            });
+        });
+    });
+</script>

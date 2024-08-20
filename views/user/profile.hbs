@@ -1,0 +1,289 @@
+<style>
+    h4{
+        margin: 30px 0px;
+    }
+</style>
+
+<main class="main">
+    <section class="pt-150 pb-150">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 m-auto">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="dashboard-menu">
+                                <ul class="nav flex-column" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="dashboard-tab" data-bs-toggle="tab"
+                                            href="/profile" role="tab" aria-controls="dashboard"
+                                            aria-selected="false"><i
+                                                class="fi-rs-settings-sliders mr-10"></i>Profile</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="orders-tab" data-bs-toggle="tab" href="/get/orders"
+                                            role="tab" aria-controls="orders" aria-selected="false"><i
+                                                class="fi-rs-shopping-bag mr-10"></i>Orders</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="track-orders-tab" data-bs-toggle="tab" href="/wallet"
+                                            role="tab" aria-controls="track-orders" aria-selected="false"><i
+                                                class="fi-rs-shopping-cart-check mr-10"></i>Wallet</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="/address"
+                                            role="tab" aria-controls="address" aria-selected="true"><i
+                                                class="fi-rs-marker mr-10"></i>My Address</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="account-detail-tab" data-bs-toggle="tab"
+                                            href="/wishlist" role="tab" aria-controls="account-detail"
+                                            aria-selected="true"><i class="fi-rs-user mr-10"></i>Wishlist</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/returns"><i
+                                                class="fi-rs-sign-out mr-10"></i>Return</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/referrals"><i
+                                                class="fi-rs-sign-out mr-10"></i>Referrals</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="tab-content dashboard-content">
+                                <div class="tab-pane fade active show" role="tabpanel" aria-labelledby="dashboard-tab">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5>Account Details</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <h4>Edit Profile</h4>
+                                            <form id="profile-form" method="POST" action="/profile/update">
+                                                <div class="row">
+                                                    <div class="form-group col-md-6">
+                                                        <label>First Name <span class="required">*</span></label>
+                                                        <span id="firstname-display"
+                                                            class="form-control square">{{user.firstname}}</span>
+                                                        <input type="text" name="firstname" id="firstname-input"
+                                                            class="form-control square" style="display: none;"
+                                                            value="{{user.firstname}}">
+                                                    </div>
+                                                    <div class="form-group col-md-6">
+                                                        <label>Last Name <span class="required">*</span></label>
+                                                        <span id="lastname-display"
+                                                            class="form-control square">{{user.lastname}}</span>
+                                                        <input type="text" name="lastname" id="lastname-input"
+                                                            class="form-control" style="display: none;"
+                                                            value="{{user.lastname}}">
+                                                    </div>
+                                                    <div class="form-group col-md-12">
+                                                        <label>Email Address <span class="required">*</span></label>
+                                                        <span id="email-display"
+                                                            class="form-control square">{{user.email}}</span>
+                                                        <input type="email" name="email" id="email-input"
+                                                            class="form-control" style="display: none;"
+                                                            value="{{user.email}}" readonly>
+                                                    </div>
+                                                    <div class="form-group col-md-12">
+                                                        <label>Mobile <span class="required">*</span></label>
+                                                        <span id="mobile-display"
+                                                            class="form-control square">{{user.mobile}}</span>
+                                                        <input type="text" name="mobile" id="mobile-input"
+                                                            class="form-control" style="display: none;"
+                                                            value="{{user.mobile}}">
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <button type="button" id="edit-profile-button"
+                                                            class="btn btn-fill-out submit"
+                                                            style="position: relative; left: 25px;">Edit
+                                                            Profile</button>
+                                                        <button type="submit" id="update-profile-button"
+                                                            class="btn btn-fill-out submit"
+                                                            style="display: none;">Update
+                                                            Profile</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <h4>Change Password</h4>
+                                            <form id="change-password-form" method="POST" action="/profile/change-password">
+    <div class="row">
+        <div class="form-group col-md-12">
+            <label>Old Password <span class="required">*</span></label>
+            <div class="input-group">
+                <input type="password" name="oldPassword" class="form-control" id="oldPassword">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-outline-secondary toggle-password" toggle="#oldPassword">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-md-6">
+            <label>New Password <span class="required">*</span></label>
+            <div class="input-group">
+                <input type="password" name="newPassword" id="newPassword" class="form-control">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-outline-secondary toggle-password" toggle="#newPassword">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-md-6">
+            <label>Confirm New Password <span class="required">*</span></label>
+            <div class="input-group">
+                <input type="password" name="confirmPassword" id="confirmPassword" class="form-control">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-outline-secondary toggle-password" toggle="#confirmPassword">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-fill-out submit" style="position: relative; left: 25px;">
+                Change Password
+            </button>
+        </div>
+    </div>
+</form>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- SweetAlert2 Script -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script>
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const input = document.querySelector(this.getAttribute('toggle'));
+            const icon = this.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    });
+</script>
+<script>
+    document.getElementById('edit-profile-button').addEventListener('click', function () {
+        document.getElementById('firstname-display').style.display = 'none';
+        document.getElementById('firstname-input').style.display = 'block';
+
+        document.getElementById('lastname-display').style.display = 'none';
+        document.getElementById('lastname-input').style.display = 'block';
+
+        document.getElementById('email-display').style.display = 'none';
+        document.getElementById('email-input').style.display = 'block';
+
+        document.getElementById('mobile-display').style.display = 'none';
+        document.getElementById('mobile-input').style.display = 'block';
+
+        document.getElementById('edit-profile-button').style.display = 'none';
+        document.getElementById('update-profile-button').style.display = 'block';
+    });
+
+    document.getElementById('profile-form').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent form submission
+
+        let firstname = document.getElementById('firstname-input').value.trim();
+        let lastname = document.getElementById('lastname-input').value.trim();
+        let email = document.getElementById('email-input').value.trim();
+        let mobile = document.getElementById('mobile-input').value.trim();
+
+        if (firstname === '' || lastname === '' || email === '' || mobile === '') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'All fields are required!',
+            });
+            return;
+        }
+
+        let namePattern = /^[A-Za-z]+$/;
+        if (!namePattern.test(firstname) || !namePattern.test(lastname)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'First name and last name must contain only letters!',
+            });
+            return;
+        }
+
+        let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please enter a valid email address!',
+            });
+            return;
+        }
+
+        let mobilePattern = /^(?!0000000000)\d{10}$/;
+        if (!mobilePattern.test(mobile)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please enter a valid 10-digit phone number!',
+            });
+            return;
+        }
+
+        // If validation passes, submit the form
+        this.submit();
+    });
+</script>
+<script>
+    document.getElementById('change-password-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent form submission
+        let oldPassword = document.getElementById('oldPassword').value.trim();
+        let newPassword = document.getElementById('newPassword').value.trim();
+        let confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+        const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/;
+         if (newPassword === ''|| confirmPassword === '' ||oldPassword === '') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'All fields are required!',
+            });
+            return;
+        }
+        if (!passwordRegex.test(newPassword)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+            });
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'New password and confirm password do not match!',
+            });
+            return;
+        }
+
+        // If validation passes, submit the form
+        this.submit();
+    });
+</script>

@@ -1,0 +1,142 @@
+<div class="content-body">
+    <div class="container-fluid">
+        <h2>Edit Category</h2>
+        <div id="error-message" class="alert alert-danger" style="display:none;"></div>
+        <form id="editCategoryForm" action="/admin/categories/edit/{{category._id}}" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" name="name" id="name" class="form-control" value="{{category.name}}" required>
+                <small id="nameError" class="form-text text-danger" style="display:none;"></small>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea name="description" id="description" class="form-control">{{category.description}}</textarea>
+                <small id="descriptionError" class="form-text text-danger" style="display:none;"></small>
+            </div>
+            <div class="form-group">
+                <label for="image">Image</label>
+                <input type="file" name="image" id="categoryImage" class="form-control">
+                <input type="hidden" name="existingImage" value="{{category.image}}">
+                <img id="category-cropped-image" src="/uploads/categories/{{category.image}}" alt="Current Image" style="width: 100px;">
+                <small id="imageError" class="form-text text-danger" style="display:none;"></small>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Category</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for image cropping -->
+<div class="modal fade" id="cropModalCategory" tabindex="-1" role="dialog" aria-labelledby="cropModalLabelCategory" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cropModalLabelCategory">Crop Image</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <img id="image-to-crop-category" src="" alt="Picture">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="cropButtonCategory">Crop</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.getElementById('editCategoryForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        let isValid = true;
+
+        const name = document.getElementById('name').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const image = document.getElementById('categoryImage').files[0];
+
+        const nameError = document.getElementById('nameError');
+        const descriptionError = document.getElementById('descriptionError');
+        const imageError = document.getElementById('imageError');
+
+        nameError.style.display = 'none';
+        descriptionError.style.display = 'none';
+        imageError.style.display = 'none';
+
+        const alphaRegex = /^[A-Za-z\s\W]+$/;
+
+
+        if (!name) {
+            isValid = false;
+            nameError.textContent = 'Name is required';
+            nameError.style.display = 'block';
+        } else if (!alphaRegex.test(name)) {
+            isValid = false;
+            nameError.textContent = 'Name must contain only alphabets';
+            nameError.style.display = 'block';
+        }
+
+        if (!description) {
+            isValid = false;
+            descriptionError.textContent = 'Description is required';
+            descriptionError.style.display = 'block';
+        } else if (!alphaRegex.test(description)) {
+            isValid = false;
+            descriptionError.textContent = 'Description must contain only alphabets';
+            descriptionError.style.display = 'block';
+        }
+
+        if (!image) {
+            imageError.style.display = 'none';
+        } else if (image && !image.name.match(/\.(jpg|jpeg|png)$/)) {
+            isValid = false;
+            imageError.textContent = 'Image must be a JPG, JPEG, or PNG file';
+            imageError.style.display = 'block';
+        }
+
+        if (isValid) {
+            this.submit();
+        } else {
+            document.getElementById('error-message').textContent = 'Please fix the errors above and try again.';
+            document.getElementById('error-message').style.display = 'block';
+        }
+    });
+
+  document.getElementById('categoryImage').addEventListener('change', function(event) {
+    const image = event.target.files[0];
+    const imageError = document.getElementById('imageError');
+    imageError.style.display = 'none';
+
+    if (image) {
+        const validImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+
+        if (!validImageTypes.includes(image.type)) {
+            imageError.textContent = 'Only JPG, JPEG, and PNG files are allowed.';
+            imageError.style.display = 'block';
+
+            // Clear the input field
+            event.target.value = '';
+
+            // Show SweetAlert
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid File Type',
+                text: 'Only JPG, JPEG, and PNG files are allowed.',
+            });
+
+            return;
+        }
+        // Proceed with cropping or other operations if the file is valid
+        // For example, open the crop modal
+        $('#cropModalCategory').modal('show');
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('image-to-crop-category').src = e.target.result;
+        };
+        reader.readAsDataURL(image);
+    }
+});
+
+</script>

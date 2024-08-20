@@ -1,0 +1,601 @@
+
+
+<style>
+    .new {
+        height: auto;
+        padding: 100px 0px;
+        margin: 50px 0px;
+    }
+    .form-check {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    input[type="radio"] {
+        width: 20px; /* Adjust width as needed */
+        height: 20px; /* Adjust height as needed */
+        margin-right: 10px; /* Space between radio button and label */
+    }
+    .form-check-label {
+        margin-bottom: 0; /* Align label with radio button */
+    }
+    .btn {
+        padding: 8px 16px; /* Adjust padding as needed */
+        font-size: 14px; /* Adjust font size as needed */
+        border-radius: 5px; /* Rounded corners */
+    }
+    .btn-main {
+        background-color: #088178; /* Change background color as needed */
+        color: white; /* Text color */
+    }
+    .btn-success {
+        background-color: #088178; /* Change background color as needed */
+        color: white; /* Text color */
+    }
+    .btn-default {
+        background-color: #088178; /* Change background color as needed */
+        color: white; /* Text color */
+    }
+    .btn-danger {
+        background-color: #dc3545; /* Change background color as needed */
+        color: white; /* Text color */
+    }
+    .btn-group {
+        display: flex;
+        align-items: center;
+    }
+    .ptp{
+        margin: 10px 0px;
+    }
+    .product-checkout-details {
+        margin-top: 20px; /* Space above order summary */
+    }
+    .widget-title {
+        margin-bottom: 40px; /* Space below order summary title */
+        font-size: 1.5em; /* Increase font size of the title */
+    }
+    .media.product-card {
+        margin-bottom: 15px; /* Space between product cards */
+        display: flex;
+        align-items: flex-start; /* Align items at the top */
+    }
+    .media-object {
+        margin-right: 15px; /* Space between image and product details */
+    }
+    .media-body {
+        display: flex;
+        flex-direction: column;
+    }
+    .media-heading {
+        font-size: 1.2em; /* Adjust font size of product name */
+        margin-bottom: 5px; /* Space below product name */
+    }
+    .summary-prices {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 20px; /* Space below price summary */
+    }
+    .summary-prices li {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px; /* Space between price items */
+    }
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.2em; /* Increase font size of total */
+        margin-top: 20px; /* Space above total */
+        border-top: 1px solid #ddd;
+        padding-top: 10px; /* Space inside total */
+    }
+    .block.billing-details {
+        margin-bottom: 30px; /* Space below billing details */
+    }
+    .block.payment-method {
+        margin-top: 50px; /* Space above payment method */
+        margin-bottom: 30px; /* Space below payment method */
+    }
+</style>
+
+<div class="page-wrapper new">
+    <div class="checkout shopping">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="block billing-details">
+                        <h4 class="widget-title">Billing Details</h4>
+                        <form class="checkout-form" method="POST" action="/orders">
+                            <input type="hidden" id="isAddingNewAddress" name="isAddingNewAddress" value="false">
+                            <input type="hidden" name="couponCode" id="hiddenCouponCode">
+                            {{#if addresses}}
+                            {{#each addresses}}
+                            <div class="form-check">
+                                <input type="radio" name="addressId" id="address{{_id}}" value="{{_id}}">
+                                <label class="form-check-label" for="address{{_id}}">
+                                    {{place}}, {{houseNumber}}, {{street}}, {{city}}, {{zipcode}}, {{country}}
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-default" onclick="editAddress('{{this._id}}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                                        <button type="button" class="btn btn-default" onclick="deleteAddress('{{this._id}}')"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                </label>
+                            </div>
+                            {{/each}}
+                            <div class="form-check">
+                                <a href="/address" role="button" class="btn btn-success ptp">Add Address</a>
+                            </div>
+                            {{else}}
+                            <div class="form-check">
+                                <a href="/address" role="button" class="btn btn-success ptp">Add Address</a>
+                            </div>
+                            {{/if}}
+                            <div class="block payment-method">
+                                <h4 class="widget-title">Payment Method</h4>
+                                <div class="form-check">
+                                    <input type="radio" name="paymentMethod" id="cod" value="COD">
+                                    <label class="form-check-label" for="cod">Cash on Delivery</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" name="paymentMethod" id="wallet" value="Wallet">
+                                    <label class="form-check-label" for="wallet">Wallet</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" name="paymentMethod" id="razorpay" value="Razorpay">
+                                    <label class="form-check-label" for="razorpay">Razorpay</label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-main mt-20">Place Order</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="product-checkout-details">
+                        <div class="block">
+                            <h4 class="widget-title">Order Summary</h4>
+                            {{#each cart.items}}
+                            <div class="media product-card">
+                                <a class="pull-left" href="product-single.html">
+                                    <img class="media-object" src="/uploads/products/{{this.product.mainImage}}" alt="Image" width="100" height="100">
+                                </a>
+                                <div class="media-body">
+                                    <h4 class="media-heading"><a href="product-single.html">{{this.product.name}}</a></h4>
+                                    <p class="price">{{this.quantity}} x {{this.product.price}}</p>
+                                </div>
+                            </div>
+                            {{/each}}
+                            <ul class="summary-prices">
+                                <li id="coupon">
+                                    {{#if couponDetails}}
+                                    <div id="couponInfo">
+                                        <span>Coupon Applied: -₹{{couponDetails.discountAmount}}</span>
+                                        <a href="#" id="removeCoupon" class="btn btn-danger">Remove</a>
+                                    </div>
+                                    {{else}}
+                                    <div id="couponInfo">
+                                        <span>Coupon Code:</span>
+                                        <span><a href="#" id="openCouponModal">Enter Coupon Code</a></span>
+                                    </div>
+                                    {{/if}}
+                                </li>
+                                 <li>
+                                    <h5>Coupons</h5>
+                                    <select name="coupons" id="#">
+                                    <option value="none">See the Coupons</option>
+                                    {{#each coupons}}
+                                    <option value="{{this.code}}">{{this.code}}</option>
+                                    {{/each}}
+                                    </select>
+                                </li>
+                                <li>
+                                    <span>Shipping:</span>
+                                    <span>Free</span>
+                                </li>
+                            </ul>
+                            <div class="summary-total">
+                                <span>Total</span>
+                                <span class="price">₹{{totalPrice}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+
+
+
+function deleteAddress(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/address/${id}`, { method: 'DELETE' })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = `/checkout`;
+                        Swal.fire({
+                            title: 'Deleted!',
+                            text: 'Your address has been deleted.',
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            const row = document.querySelector(`tr[data-id="${id}"]`);
+                            if (row) {
+                                row.remove();
+                            }
+                        });
+                    } else {
+                        response.json().then(data => {
+                            Swal.fire({
+                                title: 'Failed!',
+                                text: data.message || 'Failed to delete address.',
+                                icon: 'error'
+                            });
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'An error occurred while deleting the address.',
+                        icon: 'error'
+                    });
+                    console.error('Error deleting address:', error);
+                });
+        }
+    });
+}
+
+function editAddress(id) {
+    window.location.href = `/address/edit/${id}`;
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Function to handle applying a coupon
+    function applyCoupon(couponCode) {
+        fetch('/api/apply-coupon', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ couponCode })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.message); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                document.getElementById('hiddenCouponCode').value = couponCode;
+                updateCouponInfo(data.discountAmount, data.newTotal);
+                
+                Swal.fire({
+                    title: 'Coupon Applied',
+                    text: `Discount applied: ₹${data.discountAmount}`,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Invalid Coupon',
+                    text: data.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error applying coupon:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'An error occurred while applying the coupon. Please try again later.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        });
+    }
+
+    // Function to handle removing a coupon
+    function removeCoupon() {
+        fetch('/api/remove-coupon', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('hiddenCouponCode').value = '';
+                updateCouponInfo(0, data.totalAmount);
+
+                Swal.fire({
+                    title: 'Coupon Removed',
+                    text: 'Coupon has been removed successfully.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred while removing the coupon. Please try again later.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error removing coupon:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'An error occurred while removing the coupon. Please try again later.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        });
+    }
+
+    // Function to update the coupon information in the DOM
+    function updateCouponInfo(discountAmount, totalAmount) {
+        const couponInfo = document.getElementById('couponInfo');
+        const newTotalPriceElement = document.querySelector('.summary-total .price');
+
+        if (discountAmount > 0) {
+            couponInfo.innerHTML = `Coupon Applied: -₹${discountAmount} <a href="#" id="removeCoupon" class="btn btn-danger">Remove</a>`;
+        } else {
+            couponInfo.innerHTML = `<span>Coupon Code:</span> <span><a href="#" id="openCouponModal">Enter Coupon Code</a></span>`;
+        }
+        
+        if (newTotalPriceElement) {
+            newTotalPriceElement.textContent = `₹${totalAmount}`;
+        }
+    }
+
+    // Event listener for opening the coupon modal
+    document.addEventListener('click', function (event) {
+        if (event.target && event.target.id === 'openCouponModal') {
+            event.preventDefault();
+
+            Swal.fire({
+                title: 'Enter Coupon Code',
+                input: 'text',
+                inputPlaceholder: 'Enter your coupon code here',
+                showCancelButton: true,
+                confirmButtonText: 'Apply Coupon',
+                cancelButtonText: 'Cancel'
+            }).then(result => {
+                if (result.isConfirmed && result.value) {
+                    const couponCode = result.value.trim();
+                    applyCoupon(couponCode);
+                }
+            });
+        }
+    });
+
+    // Event delegation for removing the coupon
+    document.addEventListener('click', function (event) {
+        if (event.target && event.target.id === 'removeCoupon') {
+            event.preventDefault();
+
+            Swal.fire({
+                title: 'Remove Coupon',
+                text: 'Are you sure you want to remove the coupon?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, remove it!',
+                cancelButtonText: 'No, keep it'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    removeCoupon();
+                }
+            });
+        }
+    });
+
+    document.querySelector('form.checkout-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const selectedAddressRadio = document.querySelector('input[name="addressId"]:checked');
+        if (!selectedAddressRadio) {
+            Swal.fire({
+                title: 'Address Required',
+                text: 'Please select a billing address before placing the order.',
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+
+        try {
+            // Check if the quantity in the cart matches the stock available
+            const response = await fetch('/api/cart/check-stock', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                
+                if (!result.success) {
+                    Swal.fire({
+                        title: 'Stock Mismatch',
+                        text: result.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return; // Stop further execution if there's a stock mismatch
+                }
+
+                // Proceed with the confirmation and order placement if stock matches
+                Swal.fire({
+                    title: 'Confirm Order',
+                    text: "Are you sure you want to place this order?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, place order!',
+                    cancelButtonText: 'No, cancel!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if (selectedPaymentMethod === 'Razorpay') {
+            fetch('/api/create-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    addressId: selectedAddressRadio.value,
+                    paymentMethod: selectedPaymentMethod,
+                    couponCode: document.getElementById('hiddenCouponCode').value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.razorpayOrderId) {
+                    const options = {
+                        key: data.razorpayKeyId,
+                        amount: data.totalAmount * 100, // in paise
+                        currency: 'INR',
+                        name: 'Smile Shop',
+                        description: 'Order Payment',
+                        order_id: data.razorpayOrderId,
+                        handler: function (response) {
+                            fetch('/api/verify-payment', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(response)
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Payment Successful',
+                                        text: 'Your order has been placed successfully.',
+                                        icon: 'success',
+                                        confirmButtonText: 'OK'
+                                    }).then(() => {
+                                        window.location.href = '/confirm';
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: 'Payment Failed',
+                                        text: 'There was an issue with your payment. Please try again.',
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    }).then(() => {
+                                        window.location.href = '/orders';
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Payment verification failed:', error);
+                                Swal.fire({
+                                    title: 'Payment Verification Failed',
+                                    text: 'There was an error verifying your payment. Please contact support.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            });
+                        },
+                        prefill: {
+                            name: data.user.name,
+                            email: data.user.email,
+                            contact: data.user.phone
+                        },
+                        notes: {
+                            address: data.address
+                        },
+                        theme: {
+                            color: '#3399cc'
+                        }
+                    };
+                    console.log('Razorpay options:', options);
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                    console.log('Razorpay opened');
+                } else {
+                    Swal.fire({
+                        title: 'Order Creation Failed',
+                        text: data.message || 'There was an error creating your order. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Order creation failed:', error);
+                Swal.fire({
+                    title: 'Order Creation Failed',
+                    text: 'There was an error creating your order. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+        }else if (selectedPaymentMethod === 'COD') {
+                    
+                            fetch('/order', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    addressId: selectedAddressRadio.value,
+                                    paymentMethod: selectedPaymentMethod,
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    window.location.href = '/confirm';
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error',
+                                        text: data.message,
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: 'An error occurred while placing the order.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                                console.error('Error placing order:', error);
+                            });
+                        }
+                    }
+                });
+            } else {
+                Swal.fire('Error', 'Failed to check stock. Please try again later.', 'error');
+            }
+        } catch (error) {
+            console.error('Error checking stock:', error);
+            Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+        }
+    });
+});
+</script>
+

@@ -1,0 +1,119 @@
+<!-- categories.hbs -->
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row mb-2 mt-4">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/admin/dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Categories Management</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        <div class="card-header">
+            <h4 class="card-title">Category Management</h4>
+        </div>
+        <a href="/admin/categories/add" class="btn btn-primary mb-3 mt-3">Add Category</a>
+        {{#if success_msg}}
+            <div class="alert alert-success">{{success_msg}}</div>
+        {{/if}}
+        {{#if error_msg}}
+            <div class="alert alert-danger">{{error_msg}}</div>
+        {{/if}}
+        <table class="table table-bordered" id="example">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Image</th>
+                    <th>Edit</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each categories}}
+                    <tr>
+                        <td>{{this.name}}</td>
+                        <td>{{this.description}}</td>
+                        <td><img src="/uploads/categories/{{this.image}}" alt="{{this.name}}" style="width: 100px;"></td>
+                        <td><a href="/admin/categories/edit/{{this._id}}" class="btn btn-warning">Edit</a></td>
+                        <td>
+                            <button class="btn {{#ifCond this.status '==' 'active'}}btn-danger{{else}}btn-success{{/ifCond}} toggle-status" data-id="{{this._id}}">
+                                {{#ifCond this.status '==' 'active'}}Unlist{{else}}List{{/ifCond}}
+                            </button>
+                        </td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+   $(document).ready(function() {
+        $('#example').DataTable({
+            "paging": true,
+            "searching": true,
+            "info": true,
+            "lengthChange": false,
+            "pageLength": 10
+        });
+
+        // Event delegation for toggle-status buttons
+        $('#example tbody').on('click', '.toggle-status', function() {
+            var categoryId = $(this).data('id');
+            var button = $(this);
+            var actionText = button.text().trim() === 'Unlist' ? 'unlist' : 'list';
+            var confirmButtonText = actionText === 'unlist' ? 'Yes, unlist it!' : 'Yes, list it!';
+            var successText = actionText === 'unlist' ? 'Category has been unlisted.' : 'Category has been listed.';
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `You want to ${actionText} this category!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: confirmButtonText
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/admin/categories/toggle/${categoryId}`,
+                        type: 'POST',
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire(
+                                    'Changed!',
+                                    successText,
+                                    'success'
+                                );
+                                if (actionText === 'unlist') {
+                                    button.text('List').removeClass('btn-danger').addClass('btn-success');
+                                } else {
+                                    button.text('Unlist').removeClass('btn-success').addClass('btn-danger');
+                                }
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    response.message || 'There was an error changing the status.',
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function(err) {
+                            Swal.fire(
+                                'Error!',
+                                'There was an error processing your request.',
+                                'error'
+                            );
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>

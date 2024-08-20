@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        .new {
+            width: 400px;
+            height: 800px;
+            position: relative;
+            top: 150px;
+        }
+        .ptag {
+            margin-top: 25px;
+        }
+        .toggle-password {
+            background: none;
+            border: none;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .toggle-password i {
+            font-size: 1.2em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+   
+
+    <div class="container new">
+        {{#if success_msg}}
+        <div class="alert alert-success">{{success_msg}}</div>
+        {{/if}}
+        {{#if error_msg}}
+        <div class="alert alert-danger">{{error_msg}}</div>
+        {{/if}}
+        {{#if errors}}
+        {{#each errors}}
+        <div class="alert alert-danger">{{this.msg}}</div>
+        {{/each}}
+        {{/if}}
+
+        <div class="p-b-10">
+            <h3 class="ltext-103 cl5">Login</h3>
+        </div>
+
+        <form action="/auth/login" method="POST">
+            <div class="p-b-52">
+                <div class="bor8 dis-flex p-l-15 m-b-20">
+                    <input class="mtext-107 cl2 size-114 plh2 p-r-15" type="email" name="email" placeholder="Email" >
+                </div>
+
+                <div class="bor8 dis-flex p-l-15 m-b-20" style="position: relative;">
+                    <input class="mtext-107 cl2 size-114 plh2 p-r-15" type="password" id="password" name="password" placeholder="Password" >
+                    <button type="button" class="toggle-password" data-toggle="#password">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                </div>
+
+                <button class="flex-c-m stext-106 cl6 size-104 bor4 pointer hov-btn3 trans-04">Login</button>
+                <p class="ptag">Don't have an account? <a href="/signup">Click here</a></p>
+
+                <div class="dis-flex mt-5">
+                    <a href="forgot-pass"> Forgot Password </a>
+                </div>
+            </div>
+             <a href="/auth/google" class="btn btn primary">Signin with Google</a>
+             
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+            
+            togglePasswordButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const input = document.querySelector(button.getAttribute('data-toggle'));
+                    const icon = button.querySelector('i');
+                    
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

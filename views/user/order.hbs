@@ -1,0 +1,104 @@
+<main class="main">
+
+    <section class="pt-150 pb-150">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 m-auto">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="dashboard-menu">
+                                <ul class="nav flex-column" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link " id="dashboard-tab" data-bs-toggle="tab"
+                                            href="/profile" role="tab" aria-controls="dashboard"
+                                            aria-selected="false"><i
+                                                class="fi-rs-settings-sliders mr-10"></i>Dashboard</a>
+                                    </li>
+                                    <li class="nav-item ">
+                                        <a class="nav-link active" id="orders-tab" data-bs-toggle="tab" href="/get/orders"
+                                            role="tab" aria-controls="orders" aria-selected="false"><i
+                                                class="fi-rs-shopping-bag mr-10"></i>Orders</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="track-orders-tab" data-bs-toggle="tab"
+                                            href="/wallet" role="tab" aria-controls="track-orders"
+                                            aria-selected="false"><i class="fi-rs-shopping-cart-check mr-10"></i>Track
+                                            Wallet</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="/address"
+                                            role="tab" aria-controls="address" aria-selected="true"><i
+                                                class="fi-rs-marker mr-10"></i>My Address</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="account-detail-tab" data-bs-toggle="tab"
+                                            href="/wishlist" role="tab" aria-controls="account-detail"
+                                            aria-selected="true"><i class="fi-rs-user mr-10"></i>Wishlist</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/returns"><i
+                                                class="fi-rs-sign-out mr-10"></i>Return</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/referrals"><i
+                                                class="fi-rs-sign-out mr-10"></i>Referrals</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="tab-content dashboard-content">
+                                <div class="tab-pane fade active show" role="tabpanel" aria-labelledby="orders-tab">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Your Orders</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Order id</th>
+                                                            <th>Date</th>
+                                                            <th>Status</th>
+                                                            <th>Total</th>
+                                                            <th>View</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {{#each orders}}
+                                                        <tr>
+                                                            <td>{{this._id}}</td>
+                                                            <td>{{formatDate this.createdAt}}</td>
+                                                            <td>{{this.orderStatus}}</td>
+                                                            <td>₹{{this.totalAmount}}</td>
+                                                            <td><a href="/orders/{{this._id}}" class="btn btn-default">View</a></td>
+                                                        </tr>
+                                                        {{/each}}
+                                                    </tbody>
+                                                </table>
+                                                <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {{#if (gt currentPage 1)}}
+                            <li class="page-item"><a class="page-link" href="?page={{subtract currentPage 1}}&limit={{limit}}">Previous</a></li>
+                            {{/if}}
+                            {{#each (range 1 totalPages)}}
+                            <li class="page-item {{#if (eq this ../currentPage)}}active{{/if}}"><a class="page-link" href="?page={{this}}&limit={{../limit}}">{{this}}</a></li>
+                            {{/each}}
+                            {{#if (lt currentPage totalPages)}}
+                            <li class="page-item"><a class="page-link" href="?page={{add currentPage 1}}&limit={{limit}}">Next</a></li>
+                            {{/if}}
+                        </ul>
+                    </nav>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>

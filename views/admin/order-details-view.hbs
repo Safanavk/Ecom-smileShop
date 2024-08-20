@@ -1,0 +1,188 @@
+<style>
+    .new {
+        height: auto;
+        position: relative;
+        top: 100px;
+    }
+
+    #back {
+        margin-bottom: 20px;
+        font-size: 20px;
+        font-weight: 500;
+    }
+
+    .add {
+        margin-top: 20px;
+    }
+    .btn-primary{
+        color: white !important;
+        margin-top: 10px;
+    }
+</style>
+<div class="bg0 m-t-23 p-b-140 new">
+    <section class="order-details page-wrapper">
+        <div class="container">
+             <div class="row mb-4">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/admin/dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="/admin/orders">Orders</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Order Details</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+            <div class="row">
+                <div class="col-md-12">
+
+                    <div class="dashboard-wrapper user-dashboard">
+                        <div class="order-details-content">
+                            <h3>Order Details</h3>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Date</th>
+                                        <th>Total Items</th>
+                                        <th>Total Price</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>#{{order._id}}</td>
+                                        <td>{{formatDate order.createdAt}}</td>
+                                        <td>{{order.items.length}}</td>
+
+                                        <td>₹{{order.totalAmount}}</td>
+                                        <td><span
+                                                class="label label-{{order.orderStatus}} btn btn-primary">{{order.orderStatus}}</span>
+                                        </td>
+                                        <td>
+                                            <select class="form-control change-status" data-id="{{order._id}}" data-current-status="{{order.orderStatus}}">
+    <option value="Pending" {{#if (eq order.orderStatus "Pending")}}selected{{else}}disabled{{/if}}>Pending</option>
+    <option value="Processing" {{#if (eq order.orderStatus "Processing")}}selected{{else if (eq order.orderStatus "Pending")}}{{else}}disabled{{/if}}>Processing</option>
+    <option value="Shipped" {{#if (eq order.orderStatus "Shipped")}}selected{{else if (eq order.orderStatus "Processing")}}{{else}}disabled{{/if}}>Shipped</option>
+    <option value="Delivered" {{#if (eq order.orderStatus "Delivered")}}selected{{else if (eq order.orderStatus "Shipped")}}{{else}}disabled{{/if}}>Delivered</option>
+    <option value="Cancelled" {{#if (eq order.orderStatus "Cancelled")}}selected{{else}}disabled{{/if}}>Cancelled</option>
+</select>
+
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <h4>Items in this Order</h4>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Size</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{#each order.items}}
+                                    <tr>
+                                        <td>{{this.product.name}}</td>
+                                        <td>{{this.quantity}}</td>
+                                        <td>{{this.size}}</td>
+                                        <td>₹{{this.price}}</td>
+                                        <td>₹{{multiply this.quantity this.price}}</td>
+                                    </tr>
+                                    {{/each}}
+                                </tbody>
+                            </table>
+                            <h4 class="add">Shipping Address</h4>
+{{#if order.addressSnapshot}}
+<p>{{order.addressSnapshot.houseNumber}}, {{order.addressSnapshot.street}},
+   {{order.addressSnapshot.city}}, {{order.addressSnapshot.zipcode}}, {{order.addressSnapshot.country}}</p>
+{{else}}
+<p>{{order.address.place}}, {{order.address.houseNumber}}, {{order.address.street}},
+   {{order.address.city}}, {{order.address.zipcode}}, {{order.address.country}}</p>
+{{/if}}
+                            <h4 class="add">Payment Method</h4>
+                            <p>{{order.paymentMethod}}</p>
+                            <h4 class="add">Payment Status</h4>
+                            <p>{{order.paymentStatus}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    // Initialize the DataTable if needed
+    $('#orderTable').DataTable({
+        "paging": true,
+        "searching": true,
+        "info": true,
+        "lengthChange": false,
+        "pageLength": 15,
+        "order": [[3, "desc"]]
+    });
+
+    // Handle status change
+    $(document).on('change', '.change-status', function() {
+        var orderId = $(this).data('id');
+        var newStatus = $(this).val();
+        var currentStatus = $(this).data('current-status');
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `You want to change the status from "${currentStatus}" to "${newStatus}"!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, change it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/order/status/${orderId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ orderStatus: newStatus })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire(
+                            'Changed!',
+                            'Order status has been changed.',
+                            'success'
+                        ).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire(
+                            'Error!',
+                            data.message || 'There was an error changing the order status.',
+                            'error'
+                        );
+                    }
+                })
+                .catch(err => {
+                    Swal.fire(
+                        'Error!',
+                        err.message || 'There was an error processing your request.',
+                        'error'
+                    );
+                });
+            } else {
+                $(this).val(currentStatus);
+            }
+        });
+    });
+});
+
+</script>

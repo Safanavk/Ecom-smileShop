@@ -1,0 +1,267 @@
+<style>
+     .new {
+            
+            height: auto;
+            position: relative;
+            top: 100px;
+        }
+</style>
+
+<div class="bg0 m-t-23 p-b-140 new">
+    <div class="cart shopping">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                    <div class="block">
+                        <div class="product-list">
+                            {{#if cart.items.length}}
+                            <form method="post">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                    
+                                            <th>Item image</th>
+                                            <th>Item Name</th>
+                                            <th>Size</th> <!-- Ensure size column is here -->
+                                            <th>Item Price</th>
+                                            <th>Quantity</th>
+                                            <th>Total</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{#each cart.items}}
+                                        <tr data-product-id="{{this.product._id}}" data-size="{{this.size}}">
+                                            
+                                            <td>
+                                                <div class="product-info">
+                                                    <img width="80" src="/uploads/products/{{this.product.mainImage}}"
+                                                        alt="{{this.product.name}}" />
+                                                    
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="product-info">
+                                                    
+                                                        
+                                                    <a href="/products/{{this.product._id}}">{{this.product.name}}</a>
+                                                </div>
+                                            </td>
+                                            <td>{{this.size}}</td>
+                                            <td>₹{{this.product.price}}</td>
+                                            <td>
+                                                <button class="quantity-btn btn btn primary" data-action="decrease"
+                                                    data-product-id="{{this.product._id}}"
+                                                    data-size="{{this.size}}">-</button>
+                                                <span class="quantity">{{this.quantity}}</span>
+                                                <button class="quantity-btn  btn btn primary" data-action="increase"
+                                                    data-product-id="{{this.product._id}}"
+                                                    data-size="{{this.size}}">+</button>
+                                            </td>
+                                            <td>₹{{multiply this.quantity this.product.price}}</td>
+                                            <td><a class="product-remove" href="/cart/remove/{{this.product._id}}"
+                                                    data-product-id="{{this.product._id}}"
+                                                    data-size="{{this.size}}">Remove</a></td>
+                                        </tr>
+                                        {{/each}}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="4" class="text-right"><strong>Overall Total</strong></td>
+                                            <td colspan="2">₹<span id="overall-total">{{cart.totalPrice}}</span></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                                <a href="/checkout" class="btn btn-main pull-right">Checkout</a>
+                            </form>
+                            {{else}}
+                            <p>Your cart is empty.</p>
+                            <a href="/products" class="btn btn-primary">Shop Now</a>
+                            {{/if}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const removeButtons = document.querySelectorAll('.product-remove');
+        const quantityButtons = document.querySelectorAll('.quantity-btn');
+
+        removeButtons.forEach(function (button) {
+            button.addEventListener('click', async function (event) {
+                event.preventDefault();
+
+                const productId = this.dataset.productId;
+                const productSize = this.dataset.size;
+
+                const result = await Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'Do you want to remove this product from the cart?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, remove it!',
+                    cancelButtonText: 'Cancel'
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/cart/remove/${productId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ size: productSize })
+                        });
+
+                        if (response.status === 200) {
+                            const jsonResponse = await response.json();
+
+                            if (jsonResponse.success) {
+                                const productRow = document.querySelector(`tr[data-product-id="${productId}"][data-size="${productSize}"]`);
+                                productRow.remove();
+
+                                updateOverallTotal();
+
+                                Swal.fire('Removed!', 'The product has been removed from your cart.', 'success');
+
+                                if (!document.querySelector('.product-list tbody tr')) {
+                                    document.querySelector('.product-list').innerHTML = '<p>Your cart is empty.</p>';
+                                }
+                            } else {
+                                Swal.fire('Error', jsonResponse.message || 'Failed to remove the product.', 'error');
+                            }
+                        } else {
+                            Swal.fire('Error', 'Failed to remove the product. Please try again.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error removing product:', error);
+                        Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+                    }
+                }
+            });
+        });
+
+quantityButtons.forEach(button => {
+    button.addEventListener('click', async function (event) {
+        event.preventDefault();
+
+        const action = this.dataset.action;
+        const productId = this.dataset.productId;
+        const productSize = this.dataset.size;
+
+        const quantityElement = this.parentNode.querySelector('.quantity');
+        let currentQuantity = parseInt(quantityElement.textContent);
+
+        if (action === 'decrease' && currentQuantity > 1) {
+            currentQuantity--;
+        } else if (action === 'increase') {
+            try {
+                const response = await fetch(`/api/product/${productId}/variant/${productSize}`);
+                if (response.ok) {
+                    const variant = await response.json();
+                    if (currentQuantity < variant.stock) {
+                        currentQuantity++;
+                    } else {
+                        Swal.fire('Stock Limit', `Only ${variant.stock} units available in this size.`, 'warning');
+                        return; // Stop further execution if stock limit is reached
+                    }
+                } else {
+                    throw new Error('Error fetching variant details');
+                }
+            } catch (error) {
+                console.error('Error fetching product variant:', error);
+                Swal.fire('Error', 'Failed to fetch variant details. Please try again later.', 'error');
+                return; // Stop further execution if fetch fails
+            }
+        }
+
+        // Update the cart on the server
+        try {
+            const response = await fetch(`/cart/update/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ size: productSize, quantity: currentQuantity })
+            });
+
+            if (response.ok) {
+                quantityElement.textContent = currentQuantity;
+                const priceElement = this.closest('tr').querySelector('td:nth-child(6)');
+                const pricePerItem = parseFloat(this.closest('tr').querySelector('td:nth-child(4)').textContent.replace('₹', ''));
+                priceElement.textContent = `₹${(pricePerItem * currentQuantity).toFixed(2)}`;
+                updateOverallTotal();
+            } else {
+                const result = await response.json();
+                Swal.fire('Error', result.message || 'Failed to update quantity.', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating cart:', error);
+            Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+        }
+    });
+});
+    function updateOverallTotal() {
+    let total = 0;
+    const rows = document.querySelectorAll('.product-list tbody tr');
+    
+    rows.forEach(function (row) {
+        const quantityElement = row.querySelector('.quantity');
+        const priceElement = row.querySelector('td:nth-child(6)');
+        
+        if (quantityElement && priceElement) {
+            const quantity = parseInt(quantityElement.textContent);
+            const price = parseFloat(priceElement.textContent.replace('₹', ''));
+            total += price;
+        }
+    });
+
+    const overallTotalElement = document.getElementById('overall-total');
+    if (overallTotalElement) {
+        overallTotalElement.textContent = total.toFixed(2);
+    } else {
+        console.error('Overall total element not found.');
+    }
+}
+
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const checkoutButton = document.querySelector('.btn-main.pull-right');
+        
+        checkoutButton.addEventListener('click', async function(event) {
+            event.preventDefault();
+            
+            try {
+                const response = await fetch('/api/cart/check-stock', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        window.location.href = '/checkout'; // If stock is available, proceed to checkout
+                    } else {
+                        Swal.fire('Out of Stock', result.message, 'error');
+                    }
+                } else {
+                    Swal.fire('Error', 'Failed to check stock. Please try again later.', 'error');
+                }
+            } catch (error) {
+                console.error('Error checking stock:', error);
+                Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+            }
+        });
+    });
+</script>
