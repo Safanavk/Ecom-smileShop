@@ -6,7 +6,7 @@ require('dotenv').config();
 const getProducts = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = 5;
+        const limit = 8;
         const skip = (page - 1) * limit;
         const category = req.query.category;
         const sort = req.query.sort;
