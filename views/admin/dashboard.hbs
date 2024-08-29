@@ -1,21 +1,47 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <div class="row">
     <div class="col-lg-8 d-flex align-items-stretch">
         <div class="card w-100">
             <div class="card-body">
                 <div class="d-sm-flex d-block align-items-center justify-content-between mb-9">
-                    <div class="mb-3 mb-sm-0">
-                        <h5 class="card-title fw-semibold">Sales Overview</h5>
-                    </div>
-                    <div>
-                        <select class="form-select">
-                            <option value="1">March 2024</option>
-                            <option value="2">April 2024</option>
-                            <option value="3">May 2024</option>
-                            <option value="4">June 2024</option>
-                        </select>
+                    
+                </div>
+                <!-- Chart Section with Filters -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title mb-0">Order Analysis</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-lg-4">
+                                    <select id="filterType" class="form-control">
+                                        <option value="products">Products</option>
+                                        <option value="categories">Categories</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-4">
+                                    <select id="dateRange" class="form-control">
+                                        <option value="today">Today</option>
+                                        <option value="month">This Month</option>
+                                        <option value="year">This Year</option>
+                                        <option value="custom">Custom Date</option>
+                                    </select>
+                                    <input type="text" id="filterDate" class="form-control" placeholder="Select Date"
+                                        style="display:none;">
+                                </div>
+                                <div class="col-lg-4">
+                                    <button id="applyFilter" class="btn btn-primary">Apply Filter</button>
+                                </div>
+                            </div>
+                            <canvas id="orderAnalysisChart"></canvas>
+                        </div>
                     </div>
                 </div>
-                <div id="chart"></div>
+            </div>
+            <!-- End of Chart Section -->
             </div>
         </div>
     </div>
@@ -25,10 +51,10 @@
                 <!-- Yearly Breakup -->
                 <div class="card overflow-hidden">
                     <div class="card-body p-4">
-                        <h5 class="card-title mb-9 fw-semibold">Yearly Breakup</h5>
+                        <h5 class="card-title mb-9 fw-semibold">Total Products</h5>
                         <div class="row align-items-center">
                             <div class="col-8">
-                                <h4 class="fw-semibold mb-3">₹363580</h4>
+                                <h4 class="fw-semibold mb-3"><i class="fa fa-cubes"></i> {{totalProducts}}</h4>
                                 <div class="d-flex align-items-center mb-3">
                                     <span class="me-1 rounded-circle bg-light-success round-20 d-flex align-items-center justify-content-center">
                                         <i class="ti ti-arrow-up-left text-success"></i>
@@ -62,8 +88,62 @@
                     <div class="card-body">
                         <div class="row align-items-start">
                             <div class="col-8">
-                                <h5 class="card-title mb-9 fw-semibold"> Monthly Earnings </h5>
-                                <h4 class="fw-semibold mb-3">₹68200</h4>
+                                <h5 class="card-title mb-9 fw-semibold"> Total Orders </h5>
+                                <h4 class="fw-semibold mb-3"><i class="fa fa-shopping-cart"></i> {{totalOrders}}</h4>
+                                <div class="d-flex align-items-center pb-1">
+                                    <span class="me-2 rounded-circle bg-light-danger round-20 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-arrow-down-right text-danger"></i>
+                                    </span>
+                                    <p class="text-dark me-1 fs-3 mb-0">+9%</p>
+                                    <p class="fs-3 mb-0">last year</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex justify-content-end">
+                                    <div class="text-white bg-secondary rounded-circle p-6 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-currency-dollar fs-6"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <!-- Monthly Earnings -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row align-items-start">
+                            <div class="col-8">
+                                <h5 class="card-title mb-9 fw-semibold"> Total Users </h5>
+                                <h4 class="fw-semibold mb-3"><i class="fa fa-users"></i> {{totalUsers}}</h4>
+                                <div class="d-flex align-items-center pb-1">
+                                    <span class="me-2 rounded-circle bg-light-danger round-20 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-arrow-down-right text-danger"></i>
+                                    </span>
+                                    <p class="text-dark me-1 fs-3 mb-0">+9%</p>
+                                    <p class="fs-3 mb-0">last year</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex justify-content-end">
+                                    <div class="text-white bg-secondary rounded-circle p-6 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-currency-dollar fs-6"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <!-- Monthly Earnings -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row align-items-start">
+                            <div class="col-8">
+                                <h5 class="card-title mb-9 fw-semibold"> Total Revenue</h5>
+                                <h4 class="fw-semibold mb-3"><i class="fa-solid fa-indian-rupee-sign"></i> {{totalRevenue}}</h4>
                                 <div class="d-flex align-items-center pb-1">
                                     <span class="me-2 rounded-circle bg-light-danger round-20 d-flex align-items-center justify-content-center">
                                         <i class="ti ti-arrow-down-right text-danger"></i>
@@ -88,142 +168,129 @@
 </div>
 
 <div class="row">
-    <div class="col-lg-4 d-flex align-items-stretch">
-        <div class="card w-100">
-            <div class="card-body p-4">
-                <div class="mb-4">
-                    <h5 class="card-title fw-semibold">Recent Transactions</h5>
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Top Categories</h4>
                 </div>
-                <ul class="timeline-widget mb-0 position-relative mb-n5">
-                    <li class="timeline-item d-flex position-relative overflow-hidden">
-                        <div class="timeline-time text-dark flex-shrink-0 text-end">09:30</div>
-                        <div class="timeline-badge-wrap d-flex flex-column align-items-center">
-                            <span class="timeline-badge border-2 border border-primary flex-shrink-0 my-8"></span>
-                            <span class="timeline-badge-border d-block flex-shrink-0"></span>
-                        </div>
-                        <div class="timeline-desc fs-3 text-dark mt-n1">Payment received from John Doe of ₹3850</div>
-                    </li>
-                    <li class="timeline-item d-flex position-relative overflow-hidden">
-                        <div class="timeline-time text-dark flex-shrink-0 text-end">10:00 am</div>
-                        <div class="timeline-badge-wrap d-flex flex-column align-items-center">
-                            <span class="timeline-badge border-2 border border-info flex-shrink-0 my-8"></span>
-                            <span class="timeline-badge-border d-block flex-shrink-0"></span>
-                        </div>
-                        <div class="timeline-desc fs-3 text-dark mt-n1 fw-semibold">New sale recorded <a href="javascript:void(0)" class="text-primary d-block fw-normal">#ML-3467</a>
-                        </div>
-                    </li>
-                    <li class="timeline-item d-flex position-relative overflow-hidden">
-                        <div class="timeline-time text-dark flex-shrink-0 text-end">12:00 am</div>
-                        <div class="timeline-badge-wrap d-flex flex-column align-items-center">
-                            <span class="timeline-badge border-2 border border-success flex-shrink-0 my-8"></span>
-                            <span class="timeline-badge-border d-block flex-shrink-0"></span>
-                        </div>
-                        <div class="timeline-desc fs-3 text-dark mt-n1">Payment was made of ₹6440 to Michael</div>
-                    </li>
-                    <li class="timeline-item d-flex position-relative overflow-hidden">
-                        <div class="timeline-time text-dark flex-shrink-0 text-end">09:30 am</div>
-                        <div class="timeline-badge-wrap d-flex flex-column align-items-center">
-                            <span class="timeline-badge border-2 border border-warning flex-shrink-0 my-8"></span>
-                            <span class="timeline-badge-border d-block flex-shrink-0"></span>
-                        </div>
-                        <div class="timeline-desc fs-3 text-dark mt-n1 fw-semibold">New sale recorded <a href="javascript:void(0)" class="text-primary d-block fw-normal">#ML-3467</a>
-                        </div>
-                    </li>
-                    <li class="timeline-item d-flex position-relative overflow-hidden">
-                        <div class="timeline-time text-dark flex-shrink-0 text-end">09:30 am</div>
-                        <div class="timeline-badge-wrap d-flex flex-column align-items-center">
-                            <span class="timeline-badge border-2 border border-danger flex-shrink-0 my-8"></span>
-                            <span class="timeline-badge-border d-block flex-shrink-0"></span>
-                        </div>
-                        <div class="timeline-desc fs-3 text-dark mt-n1 fw-semibold">New arrival recorded
-                        </div>
-                    </li>
-                    <li class="timeline-item d-flex position-relative overflow-hidden">
-                        <div class="timeline-time text-dark flex-shrink-0 text-end">12:00 am</div>
-                        <div class="timeline-badge-wrap d-flex flex-column align-items-center">
-                            <span class="timeline-badge border-2 border border-success flex-shrink-0 my-8"></span>
-                        </div>
-                        <div class="timeline-desc fs-3 text-dark mt-n1">Payment Done</div>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-8 d-flex align-items-stretch">
-        <div class="card w-100">
-            <div class="card-body p-4">
-                <h5 class="card-title fw-semibold mb-4">Recent Transactions</h5>
-                <div class="table-responsive">
-                    <table class="table text-nowrap mb-0 align-middle">
-                        <thead class="text-dark fs-4">
-                            <tr>
-                                <th class="border-bottom-0">
-                                    <h6 class="fw-semibold mb-0">Id</h6>
-                                </th>
-                                <th class="border-bottom-0">
-                                    <h6 class="fw-semibold mb-0">Assigned</h6>
-                                </th>
-                                <th class="border-bottom-0">
-                                    <h6 class="fw-semibold mb-0">Name</h6>
-                                </th>
-                                <th class="border-bottom-0">
-                                    <h6 class="fw-semibold mb-0">Priority</h6>
-                                </th>
-                                <th class="border-bottom-0">
-                                    <h6 class="fw-semibold mb-0">Status</h6>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-dark fs-4">
-                            <tr>
-                                <td class="align-middle border-top-0">#D006</td>
-                                <td class="align-middle border-top-0">In Progress</td>
-                                <td class="align-middle border-top-0">Eliana Rees</td>
-                                <td class="align-middle border-top-0">
-                                    <span class="badge rounded-pill bg-light-danger">Low</span>
-                                </td>
-                                <td class="align-middle border-top-0">Last Updated 3 hours ago</td>
-                            </tr>
-                            <tr>
-                                <td class="align-middle">#D006</td>
-                                <td class="align-middle">In Progress</td>
-                                <td class="align-middle">Eliana Rees</td>
-                                <td class="align-middle">
-                                    <span class="badge rounded-pill bg-light-danger">Low</span>
-                                </td>
-                                <td class="align-middle">Last Updated 3 hours ago</td>
-                            </tr>
-                            <tr>
-                                <td class="align-middle">#D006</td>
-                                <td class="align-middle">In Progress</td>
-                                <td class="align-middle">Eliana Rees</td>
-                                <td class="align-middle">
-                                    <span class="badge rounded-pill bg-light-danger">Low</span>
-                                </td>
-                                <td class="align-middle">Last Updated 3 hours ago</td>
-                            </tr>
-                            <tr>
-                                <td class="align-middle">#D006</td>
-                                <td class="align-middle">In Progress</td>
-                                <td class="align-middle">Eliana Rees</td>
-                                <td class="align-middle">
-                                    <span class="badge rounded-pill bg-light-danger">Low</span>
-                                </td>
-                                <td class="align-middle">Last Updated 3 hours ago</td>
-                            </tr>
-                            <tr>
-                                <td class="align-middle">#D006</td>
-                                <td class="align-middle">In Progress</td>
-                                <td class="align-middle">Eliana Rees</td>
-                                <td class="align-middle">
-                                    <span class="badge rounded-pill bg-light-danger">Low</span>
-                                </td>
-                                <td class="align-middle">Last Updated 3 hours ago</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="card-body">
+                    {{#if topCategories.length}}
+                    <ul class="list-group">
+                        {{#each topCategories}}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <img src="/uploads/categories/{{this.categoryImage}}" alt="{{this.categoryName}}"
+                                    class="img-thumbnail" style="width: 50px; height: 50px;">
+                            <span>{{this.categoryName}}</span>
+                            <span class="badge badge-primary badge-pill">{{this.count}} sold</span>
+                        </li>
+                        {{/each}}
+                    </ul>
+                    {{else}}
+                    <p>No top categories found.</p>
+                    {{/if}}
                 </div>
             </div>
         </div>
     </div>
-</div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Best Selling Products</h4>
+                </div>
+                <div class="card-body">
+                    {{#if bestsellingProducts.length}}
+                    <ul class="list-group">
+                        {{#each bestsellingProducts}}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <img src="/uploads/products/{{this.productImage}}" alt="{{this.productName}}"
+                                    class="img-thumbnail" style="width: 50px; height: 50px;">
+                                <span class="ml-3">{{this.productName}}</span>
+                            </div>
+                            <span class="badge badge-primary badge-pill">{{this.count}} sold</span>
+                        </li>
+                        {{/each}}
+                    </ul>
+                    {{else}}
+                    <p>No best selling products found.</p>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<!-- JavaScript to Toggle Listings -->
+<script>
+
+    document.getElementById('applyFilter').addEventListener('click', function () {
+        const filterType = document.getElementById('filterType').value;
+        const dateRange = document.getElementById('dateRange').value;
+        const filterDate = document.getElementById('filterDate').value;
+
+        console.log(`Fetching data for filterType=${filterType},dateRange=${dateRange}, filterDate=${filterDate}`);
+
+        fetch(`/admin/order-analysis?filterType=${filterType}&dateRange=${dateRange}&filterDate=${filterDate}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received data:', data);
+                updateChart(data);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+    });
+
+    document.getElementById('dateRange').addEventListener('change', function () {
+        const dateRange = this.value;
+        const filterDate = document.getElementById('filterDate');
+        if (dateRange === 'custom') {
+            filterDate.style.display = 'block';
+        } else {
+            filterDate.style.display = 'none';
+        }
+    });
+
+    const ctx = document.getElementById('orderAnalysisChart').getContext('2d');
+    let orderAnalysisChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [], // Will be updated dynamically
+            datasets: [{
+                label: 'Orders',
+                data: [], // Will be updated dynamically
+                backgroundColor: 'rgba(227, 256, 211, 0.2)',
+                borderColor: 'rgba(65, 61, 180, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    function updateChart(data) {
+        orderAnalysisChart.data.labels = data.labels;
+        orderAnalysisChart.data.datasets[0].data = data.orders;
+        orderAnalysisChart.update();
+    }
+
+    $(document).ready(function () {
+        $('#filterDate').datepicker({
+            dateFormat: 'yy-mm-dd'
+        });
+    });
+</script>
+
+

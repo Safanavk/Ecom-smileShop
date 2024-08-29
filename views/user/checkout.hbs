@@ -264,6 +264,22 @@ function editAddress(id) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    function toggleCOD() {
+        const totalPriceElement = document.querySelector('.summary-total .price');
+        const totalAmount = parseFloat(totalPriceElement.textContent.replace('₹', '').replace(',', ''));
+
+        const codOption = document.getElementById('cod');
+        if (totalAmount > 1000) {
+            codOption.disabled = true;
+            if (codOption.checked) {
+                // If COD was selected and is now disabled, select another payment method
+                document.getElementById('wallet').checked = true;
+            }
+        } else {
+            codOption.disabled = false;
+        }
+    }
+    toggleCOD();
     // Function to handle applying a coupon
     function applyCoupon(couponCode) {
         fetch('/api/apply-coupon', {
@@ -407,56 +423,88 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    
     document.querySelector('form.checkout-form').addEventListener('submit', async function (event) {
-        event.preventDefault();
+    event.preventDefault();
 
-        const selectedAddressRadio = document.querySelector('input[name="addressId"]:checked');
-        if (!selectedAddressRadio) {
-            Swal.fire({
-                title: 'Address Required',
-                text: 'Please select a billing address before placing the order.',
-                icon: 'warning',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
+    const selectedAddressRadio = document.querySelector('input[name="addressId"]:checked');
+    if (!selectedAddressRadio) {
+        Swal.fire({
+            title: 'Address Required',
+            text: 'Please select a billing address before placing the order.',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
 
-        const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
-        try {
-            // Check if the quantity in the cart matches the stock available
-            const response = await fetch('/api/cart/check-stock', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+    try {
+        // Check if the quantity in the cart matches the stock available
+        const response = await fetch('/api/cart/check-stock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
-            if (response.ok) {
-                const result = await response.json();
-                
-                if (!result.success) {
-                    Swal.fire({
-                        title: 'Stock Mismatch',
-                        text: result.message,
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
-                    return; // Stop further execution if there's a stock mismatch
-                }
+        if (response.ok) {
+            const result = await response.json();
 
-                // Proceed with the confirmation and order placement if stock matches
+            if (!result.success) {
                 Swal.fire({
-                    title: 'Confirm Order',
-                    text: "Are you sure you want to place this order?",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, place order!',
-                    cancelButtonText: 'No, cancel!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        if (selectedPaymentMethod === 'Razorpay') {
-            fetch('/api/create-order', {
+                    title: 'Stock Mismatch',
+                    text: result.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return; // Stop further execution if there's a stock mismatch
+            }
+
+            // Proceed with the confirmation and order placement if stock matches
+            Swal.fire({
+                title: 'Confirm Order',
+                text: "Are you sure you want to place this order?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, place order!',
+                cancelButtonText: 'No, cancel!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    if (selectedPaymentMethod === 'Wallet') {
+                        const response = await fetch('/order', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                addressId: selectedAddressRadio.value,
+                                paymentMethod: selectedPaymentMethod,
+                                couponCode: document.getElementById('hiddenCouponCode').value
+                            })
+                        });
+
+                        const data = await response.json();
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Order Placed',
+                                text: 'Your order has been successfully placed using Wallet.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                window.location.href = '/confirm';
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Order Creation Failed',
+                                text: data.message || 'There was an error creating your order. Please try again.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    } else if (selectedPaymentMethod === 'Razorpay') {
+                       fetch('/api/create-order', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -551,9 +599,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     confirmButtonText: 'OK'
                 });
             });
-        }else if (selectedPaymentMethod === 'COD') {
-                    
-                            fetch('/order', {
+                    } else if (selectedPaymentMethod === 'COD') {
+                        fetch('/order', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json'
@@ -585,17 +632,18 @@ document.addEventListener('DOMContentLoaded', function () {
                                 });
                                 console.error('Error placing order:', error);
                             });
-                        }
                     }
-                });
-            } else {
-                Swal.fire('Error', 'Failed to check stock. Please try again later.', 'error');
-            }
-        } catch (error) {
-            console.error('Error checking stock:', error);
-            Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+                }
+            });
+        } else {
+            Swal.fire('Error', 'Failed to check stock. Please try again later.', 'error');
         }
-    });
+    } catch (error) {
+        console.error('Error checking stock:', error);
+        Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+    }
+});
+
 });
 </script>
 
