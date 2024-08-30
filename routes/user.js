@@ -82,6 +82,7 @@ router.post('/api/remove-coupon', orderCtrl.removeCoupon);
 router.get('/confirm', orderCtrl.orderConfirm);
 router.get('/get/orders', orderCtrl.getUserOrders);
 router.get('/orders/:id', orderCtrl.getOrderDetails);
+router.get('/orders/:id/invoice', orderCtrl.downloadInvoice);
 router.post('/orders/:id/cancel', orderCtrl.cancelOrder);
 
 // New Routes for Razorpay Integration

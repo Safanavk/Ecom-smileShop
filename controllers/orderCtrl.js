@@ -8,6 +8,10 @@ const Coupon = require('../model/couponSchema');
 const Wallet = require('../model/walletSchema');
 const Transaction = require('../model/transactionSchema');
 const Razorpay = require('razorpay');
+const pdf = require('pdfkit')
+const fs = require('fs')
+const path = require('path')
+
 
 // Create a new order
 const razorpayInstance = new Razorpay({
@@ -445,35 +449,116 @@ const getOrderDetails = async (req, res) => {
     }
 };
 
-const getUserOrders = async (req, res) => {
-    if (!req.session.user) {
-        return res.redirect('/login');
-    }
-
-    const userId = req.session.user._id;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+const generateInvoice = async (order) => {
+    const invoicesDir = path.join(__dirname, '..', 'invoices');
 
     try {
-        const orders = await Order.find({ user: userId })
-            .skip((page - 1) * limit)
-            .limit(limit)
-            .sort({ createdAt: -1 });
-console.log(orders)
-        const totalOrders = await Order.countDocuments({ user: userId });
-        const totalPages = Math.ceil(totalOrders / limit);
-
-        res.render('user/order', {
-            orders,
-            currentPage: page,
-            totalPages,
-            limit
-        });
-    } catch (error) {
-        console.error('Error fetching orders:', error);
-        res.status(500).send('Server error');
+        // Check if the invoices directory exists, create it if not
+        if (!fs.existsSync(invoicesDir)) {
+            fs.mkdirSync(invoicesDir, { recursive: true });
+        }
+    } catch (err) {
+        console.error('Error creating invoices directory:', err);
+        throw new Error('Error creating invoices directory');
     }
+
+    const filePath = path.join(invoicesDir, `${order._id}.pdf`);
+
+    return new Promise((resolve, reject) => {
+        try {
+            const doc = new pdf();
+            const writeStream = fs.createWriteStream(filePath);
+
+            doc.pipe(writeStream);
+
+            // Add title next to the logo
+            doc.fontSize(20).text('SmileShop', { align: 'center' });
+
+            // Add the header text
+            doc.moveDown();
+            doc.fontSize(25).text('Invoice', { align: 'center' });
+            doc.moveDown();
+
+            // Initialize position for item details
+            let position = 150; // Starting Y position for the table
+            const indexX = 50;
+            const descriptionX = 100;
+            const quantityX = 280;
+            const priceX = 370;
+            const amountX = 460;
+
+            // Table header
+            doc.fontSize(12)
+                .text('Index', indexX, position)
+                .text('Description', descriptionX, position)
+                .text('Quantity', quantityX, position)
+                .text('Price', priceX, position)
+                .text('Amount', amountX, position);
+            position += 20;
+
+            // Table content and total amount calculation
+            let totalAmount = 0;
+            order.items.forEach((item, index) => {
+                const itemAmount = item.quantity * item.price;
+                totalAmount += itemAmount;
+
+                doc.fontSize(10)
+                    .text(index + 1, indexX, position)
+                    .text(item.product.name, descriptionX, position)
+                    .text(item.quantity, quantityX, position)
+                    .text(`₹${item.price.toFixed(2)}`, priceX, position)
+                    .text(`₹${itemAmount.toFixed(2)}`, amountX, position);
+                position += 20;
+            });
+
+            // Add the total amount
+            position += 20;
+            doc.fontSize(12).text('Total:', priceX, position, { align: 'left' });
+            doc.fontSize(12).text(`₹${totalAmount.toFixed(2)}`, amountX, position, { align: 'right' });
+
+            // Move down before adding additional details
+            position += 40;
+            doc.moveDown();
+
+            // Add shipping address, payment method, and status
+            doc.fontSize(14).text('Shipping Address:', indexX, position);
+            position += 20;
+            doc.fontSize(12).text(`${order.addressSnapshot.place}, ${order.addressSnapshot.houseNumber}`, indexX, position);
+            position += 15;
+            doc.text(`${order.addressSnapshot.street}`, indexX, position);
+            position += 15;
+            doc.text(`${order.addressSnapshot.city}, ${order.addressSnapshot.zipcode}, ${order.addressSnapshot.country}`, indexX, position);
+
+            position += 30;
+            doc.fontSize(14).text('Payment Method:', indexX, position);
+            position += 20;
+            doc.fontSize(12).text(order.paymentMethod, indexX, position);
+
+            position += 30;
+            doc.fontSize(14).text('Payment Status:', indexX, position);
+            position += 20;
+            doc.fontSize(12).text(order.paymentStatus, indexX, position);
+
+            // End the PDF document
+            doc.end();
+
+            writeStream.on('finish', () => {
+                console.log(`Invoice generated successfully at ${filePath}`);
+                resolve(filePath);
+            });
+
+            writeStream.on('error', (err) => {
+                console.error('Error writing PDF to file:', err);
+                reject(new Error('Error generating invoice PDF'));
+            });
+        } catch (err) {
+            console.error('Error generating invoice PDF:', err);
+            reject(new Error('Error generating invoice PDF'));
+        }
+    });
 };
+
+
 // Route to handle invoice download
 const downloadInvoice = async (req, res) => {
     if (!req.session.user) {
@@ -504,6 +589,37 @@ const downloadInvoice = async (req, res) => {
     } catch (error) {
         console.error('Error generating invoice:', error);
         res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+
+const getUserOrders = async (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+
+    const userId = req.session.user._id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    try {
+        const orders = await Order.find({ user: userId })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+console.log(orders)
+        const totalOrders = await Order.countDocuments({ user: userId });
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        res.render('user/order', {
+            orders,
+            currentPage: page,
+            totalPages,
+            limit
+        });
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).send('Server error');
     }
 };
 
@@ -708,6 +824,7 @@ module.exports = {
     createRazorpayOrder,
     confirmRazorpayPayment,
     verifyRazorpayPayment,
+    downloadInvoice,
     orderConfirm,
     getOrderDetails,
     getUserOrders,

@@ -157,6 +157,9 @@ Handlebars.registerHelper('formatDate', function (date) {
         year: 'numeric'
     });
 });
+Handlebars.registerHelper('and', function (a, b) {
+    return a && b;
+});
 
 // Routes should be registered after the middlewares
 app.use('/',checkUserStatus, userRoutes);

@@ -98,6 +98,11 @@
                             {{#ifCond order.orderStatus '===' 'Delivered'}}
                             <a class="btn btn-main btn-small" href="/orders/{{order._id}}/return">Return Order</a>
                             {{/ifCond}}
+
+                            {{#if (or (eq order.paymentMethod 'Wallet') (eq order.paymentMethod 'Razorpay') (eq this.paymentMethod 'COD') (eq order.orderStatus 'Delivered'))}}
+                        <a class="btn btn-main btn-small" href="/orders/{{order._id}}/invoice">Download Invoice</a>
+                        {{/if}}
+
                         </div>
                     </div>
                 </div>
