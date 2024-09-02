@@ -61,87 +61,179 @@ const bcrypt = require('bcrypt'); // Ensure bcrypt is required
 
 const newUserRegistration = async (req, res) => {
     let { firstname, lastname, mobile, email, password, password2, referralCode } = req.body;
-    try {
-      const findUserByEmail = await User.findOne({ email });
-      if (findUserByEmail) {
-        return res.render("user/signup", { error_msg: "User with this email already exists.", firstname, lastname, email, mobile });
-      }
-  
-      const findUserByMobile = await User.findOne({ mobile });
-      if (findUserByMobile) {
-        return res.render("user/signup", { error_msg: "User with this mobile number already exists.", firstname, lastname, email, mobile });
-      }
-  
-      const hashedPassword = await bcrypt.hash(password, 10);
-  
-      const referrer = referralCode ? await User.findOne({ referralCode }) : null;
-      const referredBy = referrer ? referrer._id : null;
-  
-      const generateReferralCode = () => {
-        return Math.random().toString(36).substring(2, 8); // Generates a random 8-character code
-      };
-  
-      const newUser = new User({
-        firstname,
-        lastname,
-        mobile,
-        email,
-        password: hashedPassword,
-        isBlocked: false,
-        isVerified: false,
-        isAdmin: false,
-        referredBy,
-        referralCode: generateReferralCode()
-      });
-  
-      const savedUser = await newUser.save();
-  
-      if (!savedUser) {
-        return res.render("user/signup", { error_msg: "Failed to register user. Please try again.", firstname, lastname, email, mobile });
-      }
-  
-      if (referrer) {
-        await handleReferral(referralCode, savedUser);
-      }
-  
-      const userWallet = new Wallet({ userId: savedUser._id });
-      const savedWallet = await userWallet.save();
-  
-      if (!savedWallet) {
-        return res.render("user/signup", { error_msg: "Failed to create user wallet. Please try again.", firstname, lastname, email, mobile });
-      }
-  
-      savedUser.wallet = userWallet._id;
-      const finalSavedUser = await savedUser.save();
-  
-      if (!finalSavedUser) {
-        return res.render("user/signup", { error_msg: "Failed to link wallet to user. Please try again.", firstname, lastname, email, mobile });
-      }
-  
-      const otpcode = GenerateOtp();
-      const otpData = new Otp({
-        userId: savedUser._id,
-        otp: otpcode,
-        createdAt: Date.now(),
-        expiresAt: Date.now() + (5 * 60 * 1000) // 5 minutes
-      });
-  
-      await otpData.save();
-  
-      const sendmail = await sendMail(email, otpcode);
-      if (sendmail) {
-        req.session.userOtp = otpcode;
-        req.session.userData = savedUser;
-        return res.render("user/verifyotp", { email });
-      } else {
-        return res.render("user/signup", { error_msg: "Failed to send OTP email.", firstname, lastname, email, mobile });
-      }
-  
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).render("user/signup", { error_msg: "An error occurred during registration.", firstname, lastname, email, mobile });
+
+    // Check if all required fields are filled
+    if (!firstname || !lastname || !mobile || !email || !password || !password2) {
+        return res.render("user/signup", {
+            error_msg: "Please fill in all fields.",
+            firstname,
+            lastname,
+            email,
+            mobile
+        });
     }
-  };
+
+    // Error messages array
+    let errors = [];
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        errors.push({ msg: "Please enter a valid email address." });
+    }
+
+    // Validate mobile number format
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(mobile)) {
+        errors.push({ msg: "Please enter a valid 10-digit mobile number." });
+    }
+
+    // Validate password criteria
+    const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}/;
+    if (!passwordRegex.test(password)) {
+        errors.push({ msg: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character." });
+    }
+
+    // Check passwords match
+    if (password !== password2) {
+        errors.push({ msg: "Passwords do not match." });
+    }
+
+    // If there are validation errors, re-render the form with error messages
+    if (errors.length > 0) {
+        return res.render("user/signup", {
+            errors,
+            firstname,
+            lastname,
+            email,
+            mobile
+        });
+    }
+
+    try {
+        const findUserByEmail = await User.findOne({ email });
+        if (findUserByEmail) {
+            return res.render("user/signup", {
+                error_msg: "User with this email already exists.",
+                firstname,
+                lastname,
+                email,
+                mobile
+            });
+        }
+
+        const findUserByMobile = await User.findOne({ mobile });
+        if (findUserByMobile) {
+            return res.render("user/signup", {
+                error_msg: "User with this mobile number already exists.",
+                firstname,
+                lastname,
+                email,
+                mobile
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const referrer = referralCode ? await User.findOne({ referralCode }) : null;
+        const referredBy = referrer ? referrer._id : null;
+
+        const generateReferralCode = () => {
+            return Math.random().toString(36).substring(2, 8); // Generates a random 8-character code
+        };
+
+        const newUser = new User({
+            firstname,
+            lastname,
+            mobile,
+            email,
+            password: hashedPassword,
+            isBlocked: false,
+            isVerified: false,
+            isAdmin: false,
+            referredBy,
+            referralCode: generateReferralCode()
+        });
+
+        const savedUser = await newUser.save();
+
+        if (!savedUser) {
+            return res.render("user/signup", {
+                error_msg: "Failed to register user. Please try again.",
+                firstname,
+                lastname,
+                email,
+                mobile
+            });
+        }
+
+        if (referrer) {
+            await handleReferral(referralCode, savedUser);
+        }
+
+        const userWallet = new Wallet({ userId: savedUser._id });
+        const savedWallet = await userWallet.save();
+
+        if (!savedWallet) {
+            return res.render("user/signup", {
+                error_msg: "Failed to create user wallet. Please try again.",
+                firstname,
+                lastname,
+                email,
+                mobile
+            });
+        }
+
+        savedUser.wallet = userWallet._id;
+        const finalSavedUser = await savedUser.save();
+
+        if (!finalSavedUser) {
+            return res.render("user/signup", {
+                error_msg: "Failed to link wallet to user. Please try again.",
+                firstname,
+                lastname,
+                email,
+                mobile
+            });
+        }
+
+        const otpcode = GenerateOtp();
+        const otpData = new Otp({
+            userId: savedUser._id,
+            otp: otpcode,
+            createdAt: Date.now(),
+            expiresAt: Date.now() + (5 * 60 * 1000) // 5 minutes
+        });
+
+        await otpData.save();
+
+        const sendmail = await sendMail(email, otpcode);
+        if (sendmail) {
+            req.session.userOtp = otpcode;
+            req.session.userData = savedUser;
+            return res.render("user/verifyotp", { email });
+        } else {
+            return res.render("user/signup", {
+                error_msg: "Failed to send OTP email.",
+                firstname,
+                lastname,
+                email,
+                mobile
+            });
+        }
+
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).render("user/signup", {
+            error_msg: "An error occurred during registration.",
+            firstname,
+            lastname,
+            email,
+            mobile
+        });
+    }
+};
+
   
 
 const resendOtp = async (req, res) => {
