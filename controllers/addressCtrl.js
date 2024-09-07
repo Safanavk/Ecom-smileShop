@@ -10,10 +10,10 @@ const getAddresses = async (req, res) => {
 
     const userId = req.session.user._id;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10; // Default to 10 addresses per page
+    const limit = parseInt(req.query.limit) || 10; 
     const skip = (page - 1) * limit;
 
-    const totalAddresses = await Address.countDocuments({ userId }); // Count total addresses
+    const totalAddresses = await Address.countDocuments({ userId }); 
     const addresses = await Address.find({ userId })
       .sort({ createdAt: -1 }) // Sort addresses by date
       .skip(skip)
