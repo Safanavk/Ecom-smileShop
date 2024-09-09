@@ -131,6 +131,12 @@
                         <a class="btn btn-main btn-small" href="/orders/{{order._id}}/invoice">Download Invoice</a>
                         {{/if}}
 
+                        {{!-- Retry Payment button only if the paymentStatus is Failed --}}
+{{#ifCond order.paymentStatus '===' 'Failed'}}
+<a class="btn btn-primary" id="retryPaymentBtn">Retry Payment</a>
+{{/ifCond}}
+
+
                         </div>
                     </div>
                 </div>
@@ -165,6 +171,45 @@
                             });
                         } else {
                             Swal.fire('Error!', data.message || 'There was a problem cancelling your order.', 'error');
+                        }
+                    });
+                }).catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error!', 'An unexpected error occurred.', 'error');
+                });
+            }
+        });
+    });
+</script>
+
+<script>
+    // Retry Payment
+    document.getElementById('retryPaymentBtn').addEventListener('click', function () {
+        Swal.fire({
+            title: 'Retry Payment?',
+            text: "Your payment has failed. Would you like to retry?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, retry!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Send a request to initiate the payment retry
+                fetch('/orders/{{order._id}}/retry-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    return response.json().then(data => {
+                        if (response.ok) {
+                            Swal.fire('Success!', 'Redirecting to payment page...', 'success').then(() => {
+                                // Redirect to the payment page or Razorpay checkout
+                                window.location.href = `/payment/retry/{{order.razorpayOrderId}}`;
+                            });
+                        } else {
+                            Swal.fire('Error!', data.message || 'There was a problem retrying the payment.', 'error');
                         }
                     });
                 }).catch(error => {

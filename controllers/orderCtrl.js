@@ -320,12 +320,13 @@ const confirmRazorpayPayment = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        // Only update order status if payment is verified successfully
-        order.paymentStatus = 'Paid';
+        // If we reached here, the payment is verified successfully
+        order.paymentStatus = 'Paid'; // Set to paid only if verified
         order.razorpayPaymentId = razorpayPaymentId;
-        order.orderStatus = 'Pending';
+        order.orderStatus = 'Pending'; // You may choose to change this based on your order flow (e.g., "Processing")
         await order.save();
 
+        // Handle cart clearing and stock update logic here
         const cart = await Cart.findOne({ user: userId }).populate('items.product');
         if (!cart) {
             console.log('Cart not found'); // Debug log
@@ -347,6 +348,7 @@ const confirmRazorpayPayment = async (req, res) => {
         await cart.save();
         console.log('Cart cleared and saved'); // Debug log
 
+        // Referral reward logic
         const user = await User.findById(userId);
         if (user.isEligibleForReferralReward) {
             const newUserWallet = await Wallet.findOne({ userId });
@@ -374,6 +376,7 @@ const confirmRazorpayPayment = async (req, res) => {
 };
 
 
+
 // Adding logs to verifyRazorpayPayment
 const verifyRazorpayPayment = async (req, res) => {
     try {
@@ -385,20 +388,21 @@ const verifyRazorpayPayment = async (req, res) => {
         hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
         const generatedSignature = hmac.digest('hex');
 
+        // Check if signature is valid
         if (generatedSignature !== razorpay_signature) {
             console.log('Invalid signature'); // Debug log
-            return res.status(400).json({ success: false, message: 'Invalid signature' });
+            // Update order to failed status if signature is invalid
+            const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
+            if (order) {
+                order.paymentStatus = 'Failed';
+                await order.save();
+            }
+            return res.status(400).json({ success: false, message: 'Invalid signature, payment failed' });
         }
 
-        console.log('verifyRazorpayPayment called with:', razorpay_order_id); // Debug log
-        const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
-        console.log('Order found:', order); // Debug log to confirm order find
-        if (!order) {
-            console.log('Order not found'); // Debug log
-            return res.status(404).json({ success: false, message: 'Order not found' });
-        }
+        console.log('Signature valid, proceeding with payment confirmation'); // Debug log
 
-        // Call confirmRazorpayPayment function to finalize the order
+        // If valid, proceed to confirm payment
         req.body = {
             razorpayPaymentId: razorpay_payment_id,
             razorpayOrderId: razorpay_order_id
@@ -409,6 +413,7 @@ const verifyRazorpayPayment = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
 
 
 const orderConfirm = async (req, res) => {
@@ -514,7 +519,7 @@ const generateInvoice = async (order) => {
             // Add the total amount
             position += 20;
             doc.fontSize(12).text('Total:', priceX, position, { align: 'left' });
-            doc.fontSize(12).text(`₹${totalAmount.toFixed(2)}`, amountX, position, { align: 'right' });
+            doc.fontSize(12).text(`₹${order.totalAmount.toFixed(2)}`, amountX, position, { align: 'right' });
 
             // Move down before adding additional details
             position += 40;
@@ -538,6 +543,11 @@ const generateInvoice = async (order) => {
             doc.fontSize(14).text('Payment Status:', indexX, position);
             position += 20;
             doc.fontSize(12).text(order.paymentStatus, indexX, position);
+
+            position += 30;
+            doc.fontSize(14).text('coupon applied:', indexX, position);
+            position += 20;
+            doc.fontSize(12).text(order.discountAmount, indexX, position);
 
             // End the PDF document
             doc.end();

@@ -11,6 +11,7 @@ const wishlistCtrl = require('../controllers/wishlistCtrl');
 const paymentCtrl = require('../controllers/paymentCtrl');
 const multer = require('multer');
 const upload = multer();
+const Order = require('../model/orderSchema');
 const { checkProductExists } = require('../middlewares/auth'); 
 
 
@@ -84,6 +85,64 @@ router.get('/get/orders', orderCtrl.getUserOrders);
 router.get('/orders/:id', orderCtrl.getOrderDetails);
 router.get('/orders/:id/invoice', orderCtrl.downloadInvoice);
 router.post('/orders/:id/cancel', orderCtrl.cancelOrder);
+
+router.post('/orders/:orderId/retry-payment', async (req, res) => {
+    try {
+        const orderId = req.params.orderId;
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        if (order.paymentStatus !== 'Failed') {
+            return res.status(400).json({ success: false, message: 'Cannot retry payment for this order' });
+        }
+
+        // Recreate Razorpay order if necessary or initiate retry logic
+        const razorpayOrder = await razorpayInstance.orders.create({
+            amount: order.totalAmount * 100,
+            currency: 'INR',
+            receipt: `order_rcptid_${order.user}`
+        });
+
+        if (!razorpayOrder) {
+            return res.status(500).json({ success: false, message: 'Failed to create Razorpay order' });
+        }
+
+        // Update the order with the new Razorpay order ID
+        order.razorpayOrderId = razorpayOrder.id;
+        await order.save();
+
+        res.json({
+            success: true,
+            razorpayOrderId: razorpayOrder.id
+        });
+    } catch (error) {
+        console.error('Error retrying payment:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+router.post('/razorpay/webhook', express.json(), async (req, res) => {
+    const { event, payload } = req.body;
+
+    if (event === 'payment.failed') {
+        const { order_id, payment_id } = payload.payment.entity;
+
+        const order = await Order.findOne({ razorpayOrderId: order_id });
+        if (order) {
+            order.paymentStatus = 'Failed';
+            await order.save();
+        }
+
+        return res.status(200).json({ success: true, message: 'Payment marked as failed' });
+    }
+
+    res.status(400).json({ success: false, message: 'Event not handled' });
+});
+
+
 
 // New Routes for Razorpay Integration
 router.post('/api/create-order', orderCtrl.createRazorpayOrder);

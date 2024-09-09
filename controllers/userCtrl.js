@@ -543,10 +543,16 @@ const getCart = async (req, res) => {
         // Calculate effective price for each item in the cart
         cart.items = cart.items.map(item => {
             const product = item.product;
-            const categoryOffer = product.category?.offerIsActive ? product.category.offerRate : 0;
-            const productOffer = product.offerStatus ? product.discount : 0;
+
+            // Ensure that product price exists and is valid
+            const productPrice = product.price || 0;
+
+            // Ensure that category and product offers are valid
+            const categoryOffer = product.category?.offerIsActive ? product.category.offerRate || product.offerPrice : 0;
+            const productOffer = product.offerStatus ? product.discount || 0 : 0;
+
             const effectiveOffer = Math.max(categoryOffer, productOffer);
-            const effectivePrice = product.price - (product.price * (effectiveOffer / 100));
+            const effectivePrice = productPrice - (productPrice * (effectiveOffer / 100));
 
             return {
                 ...item.toObject(),
@@ -556,7 +562,9 @@ const getCart = async (req, res) => {
         });
 
         // Calculate the total price based on the effective price
-        const totalPrice = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
+        const totalPrice = cart.items.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+
+        console.log(totalPrice); // Check the output for debugging
 
         res.render('user/cart', { cart, totalPrice, title: "Cart Page" });
     } catch (error) {
@@ -564,6 +572,8 @@ const getCart = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+
 
 
 
@@ -609,7 +619,7 @@ const addToCart = async (req, res) => {
         if (!quantity) {
             return res.status(400).json({ success: false, message: "quantity" });
         }
-        if ( !variantSize) {
+        if (!variantSize) {
             return res.status(400).json({ success: false, message: "Missing variant size" });
         }
         if (!productId) {
@@ -622,12 +632,12 @@ const addToCart = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid quantity" });
         }
 
-        const product = await Product.findById(productId);
+        const product = await Product.findById(productId).populate('category');
         if (!product) {
             return res.status(404).json({ success: false, message: "Product not found" });
         }
         
-        if(!product.status){
+        if (!product.status) {
             return res.status(404).json({ success: false, message: "Product unlisted" });
         }
 
@@ -639,6 +649,12 @@ const addToCart = async (req, res) => {
         if (variant.stock < parsedQuantity) {
             return res.status(400).json({ success: false, message: `Only ${variant.stock} units available in the selected size.` });
         }
+
+        // Calculate the effective price based on offers
+        const categoryOffer = product.category?.offerIsActive ? product.category.offerRate : 0;
+        const productOffer = product.offerStatus ? product.discount : 0;
+        const effectiveOffer = Math.max(categoryOffer, productOffer);
+        const effectivePrice = product.price - (product.price * (effectiveOffer / 100));
 
         let cart = await Cart.findOne({ user: userId });
         if (!cart) {
@@ -655,7 +671,8 @@ const addToCart = async (req, res) => {
             cart.items.push({ product: productId, size: variantSize, quantity: parsedQuantity });
         }
 
-        cart.totalPrice += product.price * parsedQuantity;
+        // Update the cart's total price using the effective price
+        cart.totalPrice += effectivePrice * parsedQuantity;
         await cart.save();
 
         res.json({ success: true, message: "Product added to cart" });
@@ -665,6 +682,7 @@ const addToCart = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
+
 
 const quantityCheck =  async (req, res) => {
     try {
