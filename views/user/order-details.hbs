@@ -144,6 +144,7 @@
         </div>
     </section>
 </div>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Cancel Order
@@ -181,7 +182,6 @@
         });
     });
 </script>
-
 <script>
     // Retry Payment
     document.getElementById('retryPaymentBtn').addEventListener('click', function () {
@@ -195,7 +195,7 @@
             confirmButtonText: 'Yes, retry!'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Send a request to initiate the payment retry
+                // Initiate Razorpay payment with the existing order
                 fetch('/orders/{{order._id}}/retry-payment', {
                     method: 'POST',
                     headers: {
@@ -204,19 +204,73 @@
                 }).then(response => {
                     return response.json().then(data => {
                         if (response.ok) {
-                            Swal.fire('Success!', 'Redirecting to payment page...', 'success').then(() => {
-                                // Redirect to the payment page or Razorpay checkout
-                                window.location.href = `/payment/retry/{{order.razorpayOrderId}}`;
-                            });
+                            // Razorpay Checkout retry with the existing Razorpay order ID
+                            var options = {
+                                "key": data.razorpayKeyId,
+                                "amount": data.totalAmount,
+                                "currency": "INR",
+                                "name": "Your Store",
+                                "description": "Order #{{order._id}}",
+                                "order_id": data.razorpayOrderId,
+                                "handler": function (response) {
+                                    // First, verify payment with Razorpay before confirming
+                                    fetch('/api/verify-payment', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_signature: response.razorpay_signature
+                                        })
+                                    }).then(response => {
+                                        return response.json().then(verifyData => {
+                                            if (response.ok && verifyData.success) {
+                                                Swal.fire('Success!', 'Payment verified and confirmed!', 'success').then(() => {
+                                                    // Redirect to order summary page
+                                                    window.location.href = '/orders/{{order._id}}';
+                                                });
+                                            } else {
+                                                Swal.fire('Error!', 'Payment verification failed.', 'error');
+                                            }
+                                        });
+                                    }).catch(error => {
+                                        Swal.fire('Error!', 'An unexpected error occurred during payment verification.', 'error');
+                                    });
+                                },
+                                "prefill": {
+                                    "name": "{{user.name}}",
+                                    "email": "{{user.email}}",
+                                    "contact": "{{user.contact}}"
+                                },
+                                "theme": {
+                                    "color": "#F37254"
+                                }
+                            };
+
+                            var rzp = new Razorpay(options);
+                            rzp.open();
                         } else {
                             Swal.fire('Error!', data.message || 'There was a problem retrying the payment.', 'error');
                         }
                     });
                 }).catch(error => {
-                    console.error('Error:', error);
                     Swal.fire('Error!', 'An unexpected error occurred.', 'error');
                 });
             }
         });
     });
 </script>
+
+
+
+
+
+
+
+
+
+
+
+

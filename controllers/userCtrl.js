@@ -528,53 +528,60 @@ const changePassword = async (req, res) => {
     }
 };
 
-
 const getCart = async (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
     }
 
     try {
-        const cart = await Cart.findOne({ user: req.session.user._id }).populate('items.product');
+        const cart = await Cart.findOne({ user: req.session.user._id })
+            .populate({
+                path: 'items.product',
+                populate: { path: 'category' }
+            });
+
         if (!cart) {
             return res.render('user/cart', { cart: null, title: "Cart Page" });
         }
 
-        // Calculate effective price for each item in the cart
-        cart.items = cart.items.map(item => {
+        // Calculate effective price and total price for each item
+        cart.items.forEach(item => {
             const product = item.product;
+            const productPrice = Number(product.price) || 0;
 
-            // Ensure that product price exists and is valid
-            const productPrice = product.price || 0;
+            // Check for category and product offers
+            const categoryOffer = product.category?.offerIsActive ? Number(product.category.offerRate) || 0 : 0;
+            const productOffer = product.offerStatus ? Number(product.discount) || 0 : 0;
 
-            // Ensure that category and product offers are valid
-            const categoryOffer = product.category?.offerIsActive ? product.category.offerRate || product.offerPrice : 0;
-            const productOffer = product.offerStatus ? product.discount || 0 : 0;
-
+            // Calculate the highest offer rate
             const effectiveOffer = Math.max(categoryOffer, productOffer);
+
+            // Calculate effective price
             const effectivePrice = productPrice - (productPrice * (effectiveOffer / 100));
 
-            return {
-                ...item.toObject(),
-                effectivePrice, // Add the effective price to the cart item
-                totalPrice: effectivePrice * item.quantity // Calculate total for each item
-            };
+            // Update effectivePrice in the cart schema
+            item.effectivePrice = effectivePrice;
+
+            // Calculate total price for the cart
+            item.totalPrice = effectivePrice * item.quantity;
         });
 
-        // Calculate the total price based on the effective price
+        // Calculate the total cart price
         const totalPrice = cart.items.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
 
-        console.log(totalPrice); // Check the output for debugging
+        // Update the totalPrice in the cart schema
+        cart.totalPrice = totalPrice;
 
+        // Save the updated cart
+        await cart.save();
+
+        // Render the cart view
         res.render('user/cart', { cart, totalPrice, title: "Cart Page" });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
-
-
-
 
 
 const checkCart = async (req, res) => {
@@ -617,33 +624,33 @@ const addToCart = async (req, res) => {
         const userId = req.session.user._id;
 
         if (!quantity) {
-            return res.status(400).json({ success: false, message: "quantity" });
+            return res.status(400).json({ success: false, message: "Quantity is required." });
         }
         if (!variantSize) {
-            return res.status(400).json({ success: false, message: "Missing variant size" });
+            return res.status(400).json({ success: false, message: "Missing variant size." });
         }
         if (!productId) {
-            return res.status(400).json({ success: false, message: "product id" });
+            return res.status(400).json({ success: false, message: "Product ID is required." });
         }
 
         // Validate quantity
         const parsedQuantity = parseInt(quantity, 10);
         if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
-            return res.status(400).json({ success: false, message: "Invalid quantity" });
+            return res.status(400).json({ success: false, message: "Invalid quantity." });
         }
 
         const product = await Product.findById(productId).populate('category');
         if (!product) {
-            return res.status(404).json({ success: false, message: "Product not found" });
+            return res.status(404).json({ success: false, message: "Product not found." });
         }
-        
+
         if (!product.status) {
-            return res.status(404).json({ success: false, message: "Product unlisted" });
+            return res.status(400).json({ success: false, message: "Product is unlisted." });
         }
 
         const variant = product.variants.find(v => v.size === variantSize);
         if (!variant) {
-            return res.status(400).json({ success: false, message: "Variant not found" });
+            return res.status(400).json({ success: false, message: "Variant not found." });
         }
 
         if (variant.stock < parsedQuantity) {
@@ -651,10 +658,25 @@ const addToCart = async (req, res) => {
         }
 
         // Calculate the effective price based on offers
-        const categoryOffer = product.category?.offerIsActive ? product.category.offerRate : 0;
-        const productOffer = product.offerStatus ? product.discount : 0;
-        const effectiveOffer = Math.max(categoryOffer, productOffer);
-        const effectivePrice = product.price - (product.price * (effectiveOffer / 100));
+        let effectivePrice = product.price;
+
+        if (product.offerStatus && product.offerPrice > 0) {
+            effectivePrice = product.offerPrice;
+        } else {
+            let discount = 0;
+
+            if (product.offerStatus && product.discount > 0) {
+                discount = product.discount;
+            }
+
+            if (product.category && product.category.offerIsActive && product.category.offerRate > discount) {
+                discount = product.category.offerRate;
+            }
+
+            if (discount > 0) {
+                effectivePrice = product.price - (product.price * (discount / 100));
+            }
+        }
 
         let cart = await Cart.findOne({ user: userId });
         if (!cart) {
@@ -675,13 +697,14 @@ const addToCart = async (req, res) => {
         cart.totalPrice += effectivePrice * parsedQuantity;
         await cart.save();
 
-        res.json({ success: true, message: "Product added to cart" });
+        res.json({ success: true, message: "Product added to cart." });
 
     } catch (error) {
         console.error('Error adding product to cart:', error);
-        res.status(500).json({ success: false, message: "Server error" });
+        res.status(500).json({ success: false, message: "Server error." });
     }
 };
+
 
 
 const quantityCheck =  async (req, res) => {

@@ -86,60 +86,22 @@ router.get('/orders/:id', orderCtrl.getOrderDetails);
 router.get('/orders/:id/invoice', orderCtrl.downloadInvoice);
 router.post('/orders/:id/cancel', orderCtrl.cancelOrder);
 
-router.post('/orders/:orderId/retry-payment', async (req, res) => {
+// routes/payment.js
+router.post('/update-payment-status-failed', async (req, res) => {
     try {
-        const orderId = req.params.orderId;
-        const order = await Order.findById(orderId);
-
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
-        }
-
-        if (order.paymentStatus !== 'Failed') {
-            return res.status(400).json({ success: false, message: 'Cannot retry payment for this order' });
-        }
-
-        // Recreate Razorpay order if necessary or initiate retry logic
-        const razorpayOrder = await razorpayInstance.orders.create({
-            amount: order.totalAmount * 100,
-            currency: 'INR',
-            receipt: `order_rcptid_${order.user}`
-        });
-
-        if (!razorpayOrder) {
-            return res.status(500).json({ success: false, message: 'Failed to create Razorpay order' });
-        }
-
-        // Update the order with the new Razorpay order ID
-        order.razorpayOrderId = razorpayOrder.id;
-        await order.save();
-
-        res.json({
-            success: true,
-            razorpayOrderId: razorpayOrder.id
-        });
-    } catch (error) {
-        console.error('Error retrying payment:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-router.post('/razorpay/webhook', express.json(), async (req, res) => {
-    const { event, payload } = req.body;
-
-    if (event === 'payment.failed') {
-        const { order_id, payment_id } = payload.payment.entity;
-
-        const order = await Order.findOne({ razorpayOrderId: order_id });
+        const { orderId } = req.body;
+        const order = await Order.findOne({ razorpayOrderId: orderId });
         if (order) {
             order.paymentStatus = 'Failed';
             await order.save();
+            return res.status(200).json({ success: true, message: 'Payment status updated to Failed' });
+        } else {
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
-
-        return res.status(200).json({ success: true, message: 'Payment marked as failed' });
+    } catch (error) {
+        console.error('Error updating payment status:', error);
+        return res.status(500).json({ success: false, message: 'Server error' });
     }
-
-    res.status(400).json({ success: false, message: 'Event not handled' });
 });
 
 
@@ -148,6 +110,8 @@ router.post('/razorpay/webhook', express.json(), async (req, res) => {
 router.post('/api/create-order', orderCtrl.createRazorpayOrder);
 router.post('/confirm-razorpay-payment', orderCtrl.confirmRazorpayPayment);
 router.post('/api/verify-payment', orderCtrl.verifyRazorpayPayment);
+router.post('/orders/:orderId/retry-payment', orderCtrl.retryPayment);
+
 
 // Return Management (Use only returnController)
 router.get('/orders/:orderId/return', returnController.showReturnForm); // Move to returnController

@@ -22,7 +22,12 @@ const cartSchema = new Schema({
                 type: Number,
                 required: true,
                 min: 1
-            }
+            },
+            effectivePrice: {  // Add effectivePrice field here
+                type: Number,
+                required: true,
+                default: 0
+            }
         }
     ],
     totalPrice: {

@@ -30,34 +30,34 @@
                                     </thead>
                                     <tbody>
                                         {{#each cart.items}}
-                                        <tr data-product-id="{{this.product._id}}" data-size="{{this.size}}">
-                                            <td>
-                                                <div class="product-info">
-                                                    <img width="80" src="/uploads/products/{{this.product.mainImage}}" alt="{{this.product.name}}" />
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="product-info">
-                                                    <a href="/products/{{this.product._id}}">{{this.product.name}}</a>
-                                                </div>
-                                            </td>
-                                            <td>{{this.size}}</td>
-                                            <!-- Corrected item price display -->
-                                            <td>₹{{this.effectivePrice}}</td>
+<tr data-product-id="{{this.product._id}}" data-size="{{this.size}}">
+    <td>
+        <div class="product-info">
+            <img width="80" src="/uploads/products/{{this.product.mainImage}}" alt="{{this.product.name}}" />
+        </div>
+    </td>
+    <td>
+        <div class="product-info">
+            <a href="/products/{{this.product._id}}">{{this.product.name}}</a>
+        </div>
+    </td>
+    <td>{{this.size}}</td>
+    <!-- Display effective price -->
+    <td>₹{{this.effectivePrice}}</td>
 
-                                            <td>
-                                                <button class="quantity-btn btn btn-primary" data-action="decrease" data-product-id="{{this.product._id}}" data-size="{{this.size}}">-</button>
-                                                <span class="quantity">{{this.quantity}}</span>
-                                                <button class="quantity-btn btn btn-primary" data-action="increase" data-product-id="{{this.product._id}}" data-size="{{this.size}}">+</button>
-                                            </td>
-                                            <!-- Corrected total price calculation -->
-                                            <td>₹{{multiply this.quantity this.effectivePrice}}</td>
+    <td>
+        <button class="quantity-btn btn btn-primary" data-action="decrease" data-product-id="{{this.product._id}}" data-size="{{this.size}}">-</button>
+        <span class="quantity">{{this.quantity}}</span>
+        <button class="quantity-btn btn btn-primary" data-action="increase" data-product-id="{{this.product._id}}" data-size="{{this.size}}">+</button>
+    </td>
+    <!-- Multiply quantity by effective price -->
+    <td>₹{{multiply this.quantity this.effectivePrice}}</td>
+    <td>
+        <a class="product-remove" href="/cart/remove/{{this.product._id}}" data-product-id="{{this.product._id}}" data-size="{{this.size}}">Remove</a>
+    </td>
+</tr>
+{{/each}}
 
-                                            <td>
-                                                <a class="product-remove" href="/cart/remove/{{this.product._id}}" data-product-id="{{this.product._id}}" data-size="{{this.size}}">Remove</a>
-                                            </td>
-                                        </tr>
-                                        {{/each}}
                                     </tbody>
                                     <tfoot>
                                         <tr>
