@@ -27,12 +27,10 @@
         align-items: center;
         margin-bottom: 6px;
     }
-    /* Add this CSS */
-.added-to-wishlist {
-    background-color: rgb(6, 93, 164); /* Set background color to blue */
-    color: white; /* Optional: Change text color if needed */
+    .add-to-cart i {
+    color: rgb(5, 124, 99);
 }
-
+  
 </style>
 
 <div class="bg0 m-t-23 p-b-140 new">
@@ -184,43 +182,45 @@
                     </div>
 
                     <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l">
-                            <a href="/products/{{this._id}}" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                {{this.name}}
-                            </a>
+    <div class="block2-txt-child1 flex-col-l">
+        <a href="/products/{{this._id}}" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+            {{this.name}}
+        </a>
 
-                            <p class="product-price">
-                {{#if this.effectiveOffer}}
-                <del>₹{{this.price}}</del>
-                <span style="padding-right: 100px;">₹{{this.effectivePrice}}</span>
-                <span class="offer-tag">{{this.effectiveOffer}}% off</span>
-                {{else}}
-                ₹{{this.price}}
-                {{/if}}
-            </p>
-
-            {{#if this.variants.length}}
-            <div class="variant-selection">
-                <select class="form-control variant-size">
-                    {{#each this.variants}}
-                    <option value="{{size}}" data-stock="{{stock}}">{{size}} ({{stock}} in stock)</option>
-                    {{/each}}
-                </select>
-            </div>
+        <p class="product-price">
+            {{#if this.effectiveOffer}}
+            <del>₹{{this.price}}</del>
+            <span style="padding-right: 100px;">₹{{this.effectivePrice}}</span>
+            <span class="offer-tag">{{this.effectiveOffer}}% off</span>
+            {{else}}
+            ₹{{this.price}}
             {{/if}}
+        </p>
 
-        
-                        <a class="add-to-cart"><i class="fa-solid fa-cart-shopping"></i></a>
-                    
+        {{#if this.variants.length}}
+        <div class="variant-selection" style="display: flex; align-items: center;">
+            <select class="form-control variant-size">
+                {{#each this.variants}}
+                <option value="{{size}}" data-stock="{{stock}}">{{size}} ({{stock}} in stock)</option>
+                {{/each}}
+            </select>
+
+            <!-- Add-to-cart icon positioned next to the variant selector -->
+            <a class="add-to-cart" style="margin-left: 10px;">
+                <i class="fa-solid fa-cart-shopping"></i>
+            </a>
         </div>
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a  class="btn-addwish-b2 dis-block js-addwish-b2" style="position: relative;left: -30px;" onclick="toggleWishlist('{{this._id}}')" data-product-id="{{this._id}}">
-                               <img class="icon-heart1 dis-block trans-04" src="/images/icons/icon-heart-01.png" alt="ICON">
-                               <img class="icon-heart2 dis-block trans-04 ab-t-l" src="/images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
+        {{/if}}
+    </div>
 
-                        </div>
-                    </div>
+    <div class="block2-txt-child2 flex-r p-t-3">
+        <a class="btn-addwish-b2 dis-block js-addwish-b2" style="position: relative;left: -30px;" onclick="toggleWishlist('{{this._id}}')" data-product-id="{{this._id}}">
+            <img class="icon-heart1 dis-block trans-04" src="/images/icons/icon-heart-01.png" alt="ICON">
+            <img class="icon-heart2 dis-block trans-04 ab-t-l" src="/images/icons/icon-heart-02.png" alt="ICON">
+        </a>
+    </div>
+</div>
+
                 </div>
             </div>
             {{/each}}
@@ -290,58 +290,6 @@
                 window.location.href = currentUrl.toString();
             });
         });
-
-        // Wishlist toggle function
-        async function toggleWishlist(productId) {
-            const isLoggedIn = {{#if user}}true{{else}}false{{/if}};
-
-            if (!isLoggedIn) {
-                Swal.fire({
-                    title: 'Please log in',
-                    text: 'You need to log in to add items to your wishlist.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Login',
-                    cancelButtonText: 'Cancel'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = '/login';
-                    }
-                });
-            } else {
-                const button = document.querySelector(`.js-addwish-b2[data-product-id="${productId}"]`);
-                const isAdded = button.classList.contains('added-to-wishlist');
-
-                try {
-                    const response = await fetch(`/wishlist/${isAdded ? 'remove' : 'add'}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ productId })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        if (isAdded) {
-                            button.classList.remove('added-to-wishlist');
-                            button.querySelector('.icon-heart1').style.display = 'block';  // Show unfilled heart
-                            Swal.fire('Removed', 'Product removed from wishlist', 'success');
-                        } else {
-                            button.classList.add('added-to-wishlist');
-                            button.querySelector('.icon-heart2').style.display = 'block';  // Show filled heart
-                            Swal.fire('Added', 'Product added to wishlist', 'success');
-                        }
-                    } else {
-                        Swal.fire('Error', data.message, 'error');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    Swal.fire('Error', 'An error occurred. Please try again later.', 'error');
-                }
-            }
-        }
 
         // Event listener for the "Add to Cart" buttons
         const addToCartButtons = document.querySelectorAll('.add-to-cart');
@@ -424,4 +372,64 @@
             });
         });
     });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Wishlist toggle function
+        async function toggleWishlist(productId) {
+    const isLoggedIn = {{#if user}}true{{else}}false{{/if}};
+
+    if (!isLoggedIn) {
+        Swal.fire({
+            title: 'Please log in',
+            text: 'You need to log in to add items to your wishlist.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Login',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '/login';
+            }
+        });
+    } else {
+        const button = document.querySelector(`.js-addwish-b2[data-product-id="${productId}"]`);
+        const isAdded = button.classList.contains('added-to-wishlist');
+
+        try {
+            const response = await fetch(`/wishlist/${isAdded ? 'remove' : 'add'}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ productId })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                if (isAdded) {
+                    // Product is being removed from wishlist
+                    button.classList.remove('added-to-wishlist');
+                    button.querySelector('.icon-heart2').style.display = 'block';  // Hide the filled heart
+                    Swal.fire('Removed', 'Product removed from wishlist', 'success');
+                } else {
+                    // Product is being added to wishlist
+                    button.classList.add('added-to-wishlist');
+                    button.querySelector('.icon-heart1').style.display = 'block';  // Hide the unfilled heart
+                    Swal.fire('Added', 'Product added to wishlist', 'success');
+                }
+            } else {
+                Swal.fire('Error', data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire('Error', 'An error occurred. Please try again later.', 'error');
+        }
+    }
+
+    }
+    })
+    
+ 
 </script>
